@@ -1,0 +1,1077 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Šipky 501">
+<meta name="theme-color" content="#0e1116">
+<title>Šipky 501</title>
+<style>
+:root{--bg:#0e1116;--card:#171c24;--card2:#1e2530;--line:#2a313c;--txt:#e8edf3;--mut:#8b97a7;--acc:#3ddc84;--warn:#ffb020;--bad:#ff5a5f;--blue:#4aa3ff}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+[hidden]{display:none!important}
+html,body{margin:0;background:var(--bg);color:var(--txt);font:16px/1.35 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+#app{max-width:760px;margin:0 auto;padding:10px 10px calc(16px + env(safe-area-inset-bottom))}
+.top{display:flex;align-items:center;justify-content:space-between;margin:2px 2px 8px}
+h1{font-size:19px;margin:0;font-weight:700;letter-spacing:.2px}
+button{font:inherit;color:var(--txt);background:var(--card2);border:1px solid var(--line);border-radius:10px;padding:10px 12px;cursor:pointer;min-height:44px}
+button:active{filter:brightness(1.25)}
+button.primary{background:var(--acc);color:#06220f;border-color:var(--acc);font-weight:700}
+button.ghost{background:transparent}
+button.danger{background:var(--bad);border-color:var(--bad);color:#2b0507;font-weight:700}
+button[disabled]{opacity:.45}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:10px;margin-top:10px}
+.players{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.players.n1,.players.n2{grid-template-columns:1fr 1fr}
+.players.n5,.players.n6{gap:8px}
+.players.n3 .pl:last-child{grid-column:1/-1}
+.players.n5 .pl:last-child{grid-column:1/-1}
+.players.n3 .rem,.players.n4 .rem{font-size:50px}
+.players.n5 .rem,.players.n6 .rem{font-size:40px}
+.players.n5 .co,.players.n6 .co{min-height:0;font-size:12px}
+.players.n5 .pl,.players.n6 .pl{padding:6px 8px}
+.players.n5 .meta,.players.n6 .meta{font-size:11.5px}
+.pl{background:var(--card);border:2px solid var(--line);border-radius:14px;padding:8px 10px;text-align:center;position:relative}
+.pl.active{border-color:var(--acc);box-shadow:0 0 0 1px var(--acc) inset,0 0 18px rgba(61,220,132,.15)}
+.pname{font-weight:600;color:var(--mut);font-size:15px;padding:2px 0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pl.active .pname{color:var(--txt)}
+.rem{font-size:62px;line-height:1.02;font-weight:800;font-variant-numeric:tabular-nums}
+.meta{font-size:12.5px;color:var(--mut)}
+.co{min-height:20px;font-size:13.5px;color:var(--warn);font-weight:600;margin-top:2px}
+.legs{position:absolute;top:6px;right:9px;font-size:12px;color:var(--mut)}
+.turnhead{display:flex;justify-content:space-between;color:var(--mut);font-size:14px;margin-bottom:6px}
+.turnhead b{color:var(--txt)}
+.chips{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.chip{border-radius:12px;border:1px solid var(--line);background:var(--card2);min-height:58px;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:4px;font-size:20px}
+.chip small{font-size:12px;color:var(--mut)}
+.chip.empty{opacity:.4}
+.chip.add{border-style:dashed;color:var(--mut)}
+.chip.cam{border-color:rgba(61,220,132,.55)}
+.chip.man{border-color:rgba(74,163,255,.6)}
+.banner{margin-top:8px;padding:8px 10px;border-radius:10px;font-weight:700;text-align:center}
+.banner.bust{background:rgba(255,90,95,.15);color:var(--bad)}
+.banner.info{background:rgba(255,176,32,.12);color:var(--warn)}
+.camstatus{display:flex;align-items:center;gap:8px;margin-bottom:8px;font-size:14.5px}
+.dot{width:12px;height:12px;border-radius:50%;background:#555;flex:none}
+.dot.ok{background:var(--acc)}.dot.warn{background:var(--warn)}.dot.bad{background:var(--bad)}
+#camBox{display:flex;justify-content:center}
+.camwrap{position:relative;background:#000;border-radius:12px;overflow:hidden;width:100%;min-height:120px}
+.camwrap video{position:absolute;inset:0;width:100%;height:100%;display:block;background:#000}
+.camwrap canvas#ov{position:absolute;inset:0;width:100%;height:100%}
+#loupe{position:absolute;top:8px;left:8px;width:140px;height:140px;border-radius:50%;border:2px solid var(--acc);background:#000;pointer-events:none}
+#camPh{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:var(--mut);text-align:center;padding:14px;font-size:14px}
+.calhelp{display:flex;gap:10px;align-items:center;margin-top:8px;font-size:14px}
+.calhelp canvas{flex:none;width:96px;height:96px}
+.row{display:flex;gap:8px;margin-top:8px;flex-wrap:wrap}
+.row button{flex:1 1 30%}
+.row.small button{font-size:13.5px;min-height:38px;padding:6px 8px}
+#dbgBox{margin-top:8px}
+#dbg{width:100%;max-width:340px;display:block;margin:0 auto;border-radius:8px;background:#000}
+#dbgInfo{font:12px/1.4 ui-monospace,Menlo,Consolas,monospace;color:var(--mut);margin-top:6px;white-space:pre-wrap}
+.actions{display:grid;grid-template-columns:1fr 1.5fr 1fr;gap:8px;margin-top:10px}
+.toast{position:fixed;left:50%;top:max(12px,env(safe-area-inset-top));transform:translateX(-50%);background:#0b2a17;color:#c9ffe0;border:1px solid var(--acc);padding:10px 16px;border-radius:12px;font-weight:700;z-index:50;max-width:92vw;text-align:center;box-shadow:0 6px 24px rgba(0,0,0,.5)}
+.toast.warn{background:#2e2205;color:#ffe3a3;border-color:var(--warn)}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.66);display:flex;align-items:flex-end;justify-content:center;z-index:40}
+.modal[hidden]{display:none}
+.sheet{background:var(--card);border:1px solid var(--line);border-radius:18px 18px 0 0;width:100%;max-width:560px;padding:14px 14px calc(16px + env(safe-area-inset-bottom));max-height:92vh;overflow:auto}
+.sheet h2{margin:0 0 10px;font-size:18px}
+.mult{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:8px}
+.mult button.on{background:var(--blue);border-color:var(--blue);color:#021529;font-weight:700}
+.pad{display:grid;grid-template-columns:repeat(5,1fr);gap:7px}
+.pad button{font-size:18px;font-weight:600;padding:8px 0}
+.pad2{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-top:7px}
+.field{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:12px 0;font-size:15px}
+.field input[type=range]{flex:1;max-width:55%}
+.field small{color:var(--mut);display:block;font-size:12px}
+.win{text-align:center}
+.win .big{font-size:44px;margin:4px 0}
+.win p{color:var(--mut)}
+</style>
+</head>
+<body>
+<div id="app">
+  <header class="top">
+    <h1>🎯 Šipky 501</h1>
+    <button id="btnSettings" class="ghost" aria-label="Nastavení">⚙ Nastavení</button>
+  </header>
+
+  <section id="players" class="players"></section>
+
+  <section class="card">
+    <div class="turnhead"><span id="turnWho"></span><span id="turnTotal"></span></div>
+    <div id="chips" class="chips"></div>
+    <div id="banner" class="banner" hidden></div>
+  </section>
+
+  <section class="card">
+    <div class="camstatus"><span id="dot" class="dot"></span><span id="status">Kamera vypnutá</span></div>
+    <div id="camBox">
+      <div id="camWrap" class="camwrap">
+        <video id="vid" playsinline muted autoplay></video>
+        <canvas id="ov"></canvas>
+        <canvas id="loupe" width="140" height="140" hidden></canvas>
+        <div id="camPh">Kamera je vypnutá.<br>Klepněte na „Spustit kameru“. Skóre můžete do té doby zadávat ručně.</div>
+      </div>
+    </div>
+    <div id="calHelp" class="calhelp" hidden>
+      <canvas id="guide" width="192" height="192"></canvas>
+      <div id="calText"></div>
+    </div>
+    <div class="row">
+      <button id="btnCam" class="primary">📷 Spustit kameru</button>
+      <button id="btnCal">🎯 Kalibrace</button>
+      <button id="btnBase">✔ Terč je prázdný</button>
+    </div>
+    <div class="row small">
+      <button id="btnSwitch" class="ghost">🔄 Přepnout kameru</button>
+      <button id="btnSize" class="ghost">⤢ Velikost náhledu</button>
+      <button id="btnDbg" class="ghost">🔍 Ladění</button>
+    </div>
+    <div id="dbgBox" hidden>
+      <canvas id="dbg" width="480" height="480"></canvas>
+      <div id="dbgInfo"></div>
+    </div>
+  </section>
+
+  <section class="actions">
+    <button id="btnUndo">↶ Zpět</button>
+    <button id="btnNext" class="primary">Další hráč ▶</button>
+    <button id="btnNew">Nová hra</button>
+  </section>
+</div>
+
+<div id="padModal" class="modal" hidden>
+  <div class="sheet">
+    <h2 id="padTitle">Zadat šipku</h2>
+    <div class="mult" id="multRow">
+      <button data-m="1" class="on">Single</button>
+      <button data-m="2">Double</button>
+      <button data-m="3">Triple</button>
+    </div>
+    <div class="pad" id="padNums"></div>
+    <div class="pad2">
+      <button data-n="25">25</button>
+      <button data-n="50">Bull</button>
+      <button data-n="0">Mimo (0)</button>
+    </div>
+    <div class="row"><button id="padCancel" class="ghost">Zavřít</button><button id="padDelete" class="danger">Smazat šipku</button></div>
+  </div>
+</div>
+
+<div id="setModal" class="modal" hidden>
+  <div class="sheet">
+    <h2>Nastavení</h2>
+    <div class="field"><span>Double-out<small>Leg musí skončit zásahem do double / bullu</small></span><input type="checkbox" id="setDouble"></div>
+    <div class="field"><span>Hlasový výstup<small>Přečte skóre kola (čeština)</small></span><input type="checkbox" id="setSpeak"></div>
+    <div class="field"><span>Citlivost kamery<small>Nižší číslo = citlivější</small></span><input type="range" id="setSens" min="30" max="160" step="5"><b id="setSensV"></b></div>
+    <div class="field"><span>Doba ustálení<small>Kolik snímků bez pohybu před vyhodnocením</small></span><input type="range" id="setSettle" min="3" max="12" step="1"><b id="setSettleV"></b></div>
+    <div class="field"><span>Výška špičky (mm)<small>Doladění: zvyšte, pokud body vycházejí systematicky dál od kamery než skutečný zásah</small></span><input type="range" id="setShift" min="0" max="20" step="1"><b id="setShiftV"></b></div>
+    <div class="field"><span>Obrátit směr špičky<small>Zapněte, pokud detekce bere za špičku peří</small></span><input type="checkbox" id="setFlip"></div>
+    <div class="row"><button id="setClose" class="primary">Hotovo</button></div>
+  </div>
+</div>
+
+<div id="newModal" class="modal" hidden>
+  <div class="sheet">
+    <h2>Nová hra – počet hráčů</h2>
+    <p style="margin:0 0 10px;color:var(--mut);font-size:14px">Aktuální skóre se smaže. Jména hráčů změníte klepnutím na jméno.</p>
+    <div class="mult" id="newCount" style="grid-template-columns:repeat(5,1fr)">
+      <button data-n="2">2</button><button data-n="3">3</button><button data-n="4">4</button><button data-n="5">5</button><button data-n="6">6</button>
+    </div>
+    <div class="row"><button id="newCancel" class="ghost">Zrušit</button></div>
+  </div>
+</div>
+
+<div id="winModal" class="modal" hidden>
+  <div class="sheet win">
+    <div class="big">🏆</div>
+    <h2 id="winTitle"></h2>
+    <p id="winText"></p>
+    <div class="row"><button id="winUndo" class="ghost">↶ Vrátit poslední šipku</button><button id="winNext" class="primary">Další leg</button></div>
+  </div>
+</div>
+
+<script>
+'use strict';
+// ============================== CORE START ==============================
+// Čistá logika bez závislosti na DOM (testovatelná v Node).
+
+const NUMBERS = [20,1,18,4,13,6,10,15,2,17,3,19,7,16,8,11,14,9,12,5]; // po směru hodin od vrchu
+const R = {BULL_IN:6.35, BULL_OUT:15.9, TRI_IN:99, TRI_OUT:107, DBL_IN:162, DBL_OUT:170};
+const CAL_ANGLES = [9, 81, 189, 261]; // dráty 20|1, 6|13, 3|19, 8|11 na vnějším okraji double
+const RS = 480, HALF_MM = 190, SC = RS / (2 * HALF_MM), CEN = RS / 2; // narovnaný pohled: 480 px = 380 mm
+
+function makeDart(num, mult){
+  if (!num || !mult) return {num:0, mult:0, score:0, label:'0'};
+  if (num === 25) return mult === 2 ? {num:25, mult:2, score:50, label:'Bull'} : {num:25, mult:1, score:25, label:'25'};
+  return {num, mult, score:num*mult, label:(mult===3?'T':mult===2?'D':'S') + num};
+}
+
+// x,y v mm od středu (x doprava, y dolů)
+function scorePoint(x, y){
+  const r = Math.hypot(x, y);
+  if (r <= R.BULL_IN) return makeDart(25, 2);
+  if (r <= R.BULL_OUT) return makeDart(25, 1);
+  if (r > R.DBL_OUT) return makeDart(0, 0);
+  let ang = Math.atan2(x, -y) * 180 / Math.PI;
+  if (ang < 0) ang += 360;
+  const idx = Math.floor(((ang + 9) % 360) / 18);
+  const num = NUMBERS[idx];
+  let mult = 1;
+  if (r >= R.TRI_IN && r <= R.TRI_OUT) mult = 3; else if (r >= R.DBL_IN) mult = 2;
+  return makeDart(num, mult);
+}
+
+function gaussSolve(A, b){
+  const n = b.length, M = A.map((row, i) => row.concat([b[i]]));
+  for (let c = 0; c < n; c++){
+    let p = c;
+    for (let r = c + 1; r < n; r++) if (Math.abs(M[r][c]) > Math.abs(M[p][c])) p = r;
+    if (Math.abs(M[p][c]) < 1e-12) return null;
+    const t = M[c]; M[c] = M[p]; M[p] = t;
+    for (let r = c + 1; r < n; r++){
+      const f = M[r][c] / M[c][c];
+      for (let k = c; k <= n; k++) M[r][k] -= f * M[c][k];
+    }
+  }
+  const x = new Array(n);
+  for (let i = n - 1; i >= 0; i--){
+    let s = M[i][n];
+    for (let k = i + 1; k < n; k++) s -= M[i][k] * x[k];
+    x[i] = s / M[i][i];
+  }
+  return x;
+}
+function solveHomography(src, dst){
+  const A = [], b = [];
+  for (let i = 0; i < 4; i++){
+    const [x, y] = src[i], [u, v] = dst[i];
+    A.push([x, y, 1, 0, 0, 0, -u*x, -u*y]); b.push(u);
+    A.push([0, 0, 0, x, y, 1, -v*x, -v*y]); b.push(v);
+  }
+  const h = gaussSolve(A, b);
+  return h ? [h[0],h[1],h[2],h[3],h[4],h[5],h[6],h[7],1] : null;
+}
+function invert3(m){
+  const [a,b,c,d,e,f,g,h,i] = m;
+  const A = e*i - f*h, B = -(d*i - f*g), C = d*h - e*g;
+  const det = a*A + b*B + c*C;
+  if (Math.abs(det) < 1e-18) return null;
+  const k = 1 / det;
+  return [A*k, -(b*i - c*h)*k, (b*f - c*e)*k,
+          B*k,  (a*i - c*g)*k, -(a*f - c*d)*k,
+          C*k, -(a*h - b*g)*k, (a*e - b*d)*k];
+}
+function applyH(H, x, y){
+  const w = H[6]*x + H[7]*y + H[8];
+  return [(H[0]*x + H[1]*y + H[2]) / w, (H[3]*x + H[4]*y + H[5]) / w];
+}
+
+// imgPts: 4 body v pixelech zpracovávaného snímku (stejné pořadí jako CAL_ANGLES)
+function buildCalibration(imgPts){
+  const boardPts = CAL_ANGLES.map(a => {
+    const t = a * Math.PI / 180;
+    return [R.DBL_OUT * Math.sin(t), -R.DBL_OUT * Math.cos(t)];
+  });
+  const Hbi = solveHomography(boardPts, imgPts);
+  if (!Hbi) return null;
+  const Hib = invert3(Hbi);
+  if (!Hib) return null;
+  return {Hbi, Hib};
+}
+
+// Tabulka: pro každý pixel narovnaného pohledu index (do RGBA) ve zdrojovém snímku
+function buildLUT(Hbi, W, H){
+  const lut = new Int32Array(RS * RS);
+  for (let py = 0; py < RS; py++){
+    for (let px = 0; px < RS; px++){
+      const X = (px - CEN) / SC, Y = (py - CEN) / SC;
+      const w = Hbi[6]*X + Hbi[7]*Y + Hbi[8];
+      const u = (Hbi[0]*X + Hbi[1]*Y + Hbi[2]) / w;
+      const v = (Hbi[3]*X + Hbi[4]*Y + Hbi[5]) / w;
+      const iu = Math.round(u), iv = Math.round(v);
+      lut[py*RS + px] = (w > 0 && iu >= 0 && iv >= 0 && iu < W && iv < H) ? (iv*W + iu) * 4 : -1;
+    }
+  }
+  return lut;
+}
+function rectify(rgba, lut, out){
+  for (let i = 0, j = 0; i < lut.length; i++, j += 3){
+    const s = lut[i];
+    if (s < 0){ out[j] = 0; out[j+1] = 0; out[j+2] = 0; }
+    else { out[j] = rgba[s]; out[j+1] = rgba[s+1]; out[j+2] = rgba[s+2]; }
+  }
+}
+
+// Odhad bodu na rovině terče přímo pod kamerou (mm). Šipky nad rovinou se v narovnaném
+// pohledu "rozmažou" směrem od tohoto bodu, špička je tedy konec nejblíž k němu.
+function cameraFoot(Hbi, W, H){
+  const f = 0.8 * Math.max(W, H), cx = W / 2, cy = H / 2;
+  const col = (a, b, c) => [(a - cx*c)/f, (b - cy*c)/f, c];
+  const m1 = col(Hbi[0], Hbi[3], Hbi[6]);
+  const m2 = col(Hbi[1], Hbi[4], Hbi[7]);
+  const m3 = col(Hbi[2], Hbi[5], Hbi[8]);
+  const n1 = Math.hypot(...m1), n2 = Math.hypot(...m2);
+  let lam = 1 / Math.sqrt(n1 * n2);
+  if (m3[2] * lam < 0) lam = -lam;
+  const r1 = m1.map(v => v*lam), r2 = m2.map(v => v*lam), t = m3.map(v => v*lam);
+  const r3 = [r1[1]*r2[2]-r1[2]*r2[1], r1[2]*r2[0]-r1[0]*r2[2], r1[0]*r2[1]-r1[1]*r2[0]];
+  const dot = (a, b) => a[0]*b[0] + a[1]*b[1] + a[2]*b[2];
+  return {x:-dot(r1, t), y:-dot(r2, t), z:-dot(r3, t)};
+}
+
+// ---- vyhodnocení obrazu (narovnaný RGB pohled, RS×RS×3) ----
+function motionCount(cur, prev, thr){
+  let n = 0;
+  for (let j = 0; j < cur.length; j += 3){
+    const d = Math.abs(cur[j]-prev[j]) + Math.abs(cur[j+1]-prev[j+1]) + Math.abs(cur[j+2]-prev[j+2]);
+    if (d > thr) n++;
+  }
+  return n;
+}
+// maska rozdílu cur vs ref; odečte celkový posun jasu (auto-expozice). Vrací počet pixelů.
+function diffMask(cur, ref, thr, mask){
+  let s0 = 0, s1 = 0, s2 = 0, c = 0;
+  for (let p = 0; p < RS*RS; p += 7){
+    const j = p * 3;
+    s0 += cur[j]-ref[j]; s1 += cur[j+1]-ref[j+1]; s2 += cur[j+2]-ref[j+2]; c++;
+  }
+  s0 /= c; s1 /= c; s2 /= c;
+  let n = 0;
+  for (let p = 0, j = 0; p < RS*RS; p++, j += 3){
+    const d = Math.abs(cur[j]-ref[j]-s0) + Math.abs(cur[j+1]-ref[j+1]-s1) + Math.abs(cur[j+2]-ref[j+2]-s2);
+    if (d > thr){ mask[p] = 1; n++; } else mask[p] = 0;
+  }
+  return n;
+}
+function dilate3(m, out, tmp){
+  for (let y = 0; y < RS; y++){
+    const o = y * RS;
+    for (let x = 0; x < RS; x++){
+      const i = o + x;
+      tmp[i] = (m[i] || (x > 0 && m[i-1]) || (x < RS-1 && m[i+1])) ? 1 : 0;
+    }
+  }
+  for (let y = 0; y < RS; y++){
+    const o = y * RS;
+    for (let x = 0; x < RS; x++){
+      const i = o + x;
+      out[i] = (tmp[i] || (y > 0 && tmp[i-RS]) || (y < RS-1 && tmp[i+RS])) ? 1 : 0;
+    }
+  }
+}
+function components(raw, dil, minRaw){
+  const vis = new Uint8Array(RS*RS), stack = new Int32Array(RS*RS), comps = [];
+  for (let s = 0; s < RS*RS; s++){
+    if (!dil[s] || vis[s]) continue;
+    let sp = 0; stack[sp++] = s; vis[s] = 1;
+    const px = []; let minx = 1e9, maxx = -1, miny = 1e9, maxy = -1;
+    while (sp){
+      const p = stack[--sp], x = p % RS, y = (p / RS) | 0;
+      if (raw[p]){
+        px.push(p);
+        if (x < minx) minx = x; if (x > maxx) maxx = x;
+        if (y < miny) miny = y; if (y > maxy) maxy = y;
+      }
+      if (x > 0 && dil[p-1] && !vis[p-1]){ vis[p-1] = 1; stack[sp++] = p-1; }
+      if (x < RS-1 && dil[p+1] && !vis[p+1]){ vis[p+1] = 1; stack[sp++] = p+1; }
+      if (y > 0 && dil[p-RS] && !vis[p-RS]){ vis[p-RS] = 1; stack[sp++] = p-RS; }
+      if (y < RS-1 && dil[p+RS] && !vis[p+RS]){ vis[p+RS] = 1; stack[sp++] = p+RS; }
+    }
+    if (px.length >= minRaw) comps.push({px, area:px.length, minx, maxx, miny, maxy});
+  }
+  return comps;
+}
+function bboxGap(a, b){
+  const dx = Math.max(0, a.minx - b.maxx, b.minx - a.maxx);
+  const dy = Math.max(0, a.miny - b.maxy, b.miny - a.maxy);
+  return Math.hypot(dx, dy);
+}
+function groupComps(comps, gap){
+  comps.sort((a, b) => b.area - a.area);
+  const groups = [];
+  for (const c of comps){
+    const g = groups.find(g => bboxGap(g, c) < gap);
+    if (g){
+      for (const p of c.px) g.px.push(p);
+      g.area += c.area;
+      g.minx = Math.min(g.minx, c.minx); g.maxx = Math.max(g.maxx, c.maxx);
+      g.miny = Math.min(g.miny, c.miny); g.maxy = Math.max(g.maxy, c.maxy);
+    } else groups.push({px:c.px.slice(), area:c.area, minx:c.minx, maxx:c.maxx, miny:c.miny, maxy:c.maxy});
+  }
+  return groups;
+}
+
+// Špička = konec bloku nejblíž k "patě kamery" (footPx v pixelech narovnaného pohledu).
+// Robustní konec: čtvrtý nejextrémnější pixel (ignoruje osamělé šumové pixely).
+function findTip(px, footPx){
+  let cx = 0, cy = 0;
+  for (const p of px){ cx += p % RS; cy += (p / RS) | 0; }
+  cx /= px.length; cy /= px.length;
+  let ux = footPx.x - cx, uy = footPx.y - cy;
+  const L = Math.hypot(ux, uy);
+  let tx = cx, ty = cy, elong = 0;
+  if (L > 8){
+    ux /= L; uy /= L;
+    const ts = new Float32Array(px.length);
+    let tmin = 1e9;
+    for (let i = 0; i < px.length; i++){
+      const p = px[i];
+      const t = ((p % RS) - cx) * ux + (((p / RS) | 0) - cy) * uy;
+      ts[i] = t; if (t < tmin) tmin = t;
+    }
+    const sorted = Float32Array.from(ts).sort();
+    const tEnd = sorted[Math.max(0, sorted.length - 1 - Math.min(4, sorted.length - 1))];
+    elong = sorted[sorted.length - 1] - tmin;
+    let sx = 0, sy = 0, st = 0, n = 0;
+    for (let i = 0; i < px.length; i++){
+      if (ts[i] >= tEnd - 2){ const p = px[i]; sx += p % RS; sy += (p / RS) | 0; st += ts[i]; n++; }
+    }
+    sx /= n; sy /= n; st /= n;
+    tx = sx + ux * (tEnd - st); ty = sy + uy * (tEnd - st);
+  }
+  return {x:(tx - CEN) / SC, y:(ty - CEN) / SC, px:tx, py:ty, elong:elong / SC};
+}
+
+class Detector {
+  constructor(){
+    this.sens = 75; this.settle = 5; this.motionThr = 70; this.motionPix = 140;
+    this.minArea = 60; this.maxArea = 25000; this.hugeTotal = 40000; this.emptyTotal = 100;
+    this.mergeGap = 18; this.tipH = 2; this.flip = false;
+    this.foot = {x:0, y:0, z:-400};
+    this.prev = null; this.ref = null; this.emptyRef = null;
+    this.stable = 0; this.lastState = 'ready';
+    this.mask = new Uint8Array(RS*RS); this.dil = new Uint8Array(RS*RS); this.tmp = new Uint8Array(RS*RS);
+    this.info = {total:0, comps:0};
+  }
+  setFoot(f){ this.foot = {x:f.x, y:f.y, z:f.z}; }
+  footPx(){
+    const s = this.flip ? -1 : 1;
+    return {x:CEN + s * this.foot.x * SC, y:CEN + s * this.foot.y * SC};
+  }
+  clearBaseline(){ this.ref = null; this.emptyRef = null; this.prev = null; this.stable = 0; }
+  setBaseline(cur){
+    this.ref = Uint8Array.from(cur); this.emptyRef = Uint8Array.from(cur); this.prev = Uint8Array.from(cur);
+    this.stable = 0; this.lastState = 'ready';
+  }
+  step(cur){
+    if (!this.emptyRef) return {state:'nobase'};
+    const mc = motionCount(cur, this.prev, this.motionThr);
+    this.prev.set(cur);
+    if (mc > this.motionPix){ this.stable = 0; this.lastState = 'moving'; return {state:'moving'}; }
+    this.stable++;
+    if (this.stable < this.settle) return {state:'settling'};
+    if (this.stable > this.settle) return {state:this.lastState};
+    return this.evaluate(cur);
+  }
+  fin(r){ this.lastState = r.state; return r; }
+  evaluate(cur){
+    const e = diffMask(cur, this.emptyRef, this.sens, this.mask);
+    if (e < this.emptyTotal){
+      this.emptyRef.set(cur); this.ref.set(cur);
+      this.info = {total:e, comps:0};
+      return this.fin({state:'ready', event:'empty'});
+    }
+    const total = diffMask(cur, this.ref, this.sens, this.mask);
+    this.info = {total, comps:0};
+    if (total > this.hugeTotal) return this.fin({state:'blocked'});
+    if (total < this.emptyTotal){ this.ref.set(cur); return this.fin({state:'ready'}); }
+    dilate3(this.mask, this.dil, this.tmp);
+    const comps = components(this.mask, this.dil, this.minArea);
+    this.info.comps = comps.length;
+    if (!comps.length) return this.fin({state:'ready'});
+    const groups = groupComps(comps, this.mergeGap);
+    if (groups.some(g => g.area > this.maxArea)) return this.fin({state:'blocked'});
+    const fp = this.footPx();
+    const darts = groups.slice(0, 3).map(g => {
+      const t = findTip(g.px, fp);
+      // Viditelný konec šipky leží ~tipH mm nad deskou; v narovnaném pohledu je tím odsunutý
+      // od paty kamery. Vrátíme ho zpět na rovinu desky.
+      const H = Math.max(80, Math.abs(this.foot.z));
+      const k = 1 - Math.min(this.tipH, H * 0.5) / H;
+      const sg = this.flip ? -1 : 1, fx = sg * this.foot.x, fy = sg * this.foot.y;
+      return {x:fx + (t.x - fx) * k, y:fy + (t.y - fy) * k, area:g.area, elong:t.elong};
+    });
+    this.ref.set(cur);
+    return this.fin({state:'ready', event:'dart', darts});
+  }
+}
+
+// ---- nápověda k zavření (checkout) ----
+const COSEGS = (() => {
+  const a = [];
+  for (let n = 20; n >= 1; n--) a.push({l:'T'+n, s:n*3, d:false});
+  a.push({l:'Bull', s:50, d:true}, {l:'25', s:25, d:false});
+  for (let n = 20; n >= 1; n--) a.push({l:String(n), s:n, d:false});
+  for (let n = 20; n >= 1; n--) a.push({l:'D'+n, s:n*2, d:true});
+  return a;
+})();
+const coCache = new Map();
+function findCheckout(rem, k, dbl){
+  if (rem < 2 || rem > 170 || k < 1) return null;
+  const key = rem + '|' + k + '|' + dbl;
+  if (coCache.has(key)) return coCache.get(key);
+  let res = null;
+  for (let n = 1; n <= k && !res; n++) res = coSearch(rem, n, dbl);
+  coCache.set(key, res);
+  return res;
+}
+function coSearch(rem, n, dbl){
+  if (n === 1){
+    for (const s of COSEGS) if (s.s === rem && (!dbl || s.d)) return [s.l];
+    return null;
+  }
+  for (const s of COSEGS){
+    if (s.s >= rem) continue;
+    const r = coSearch(rem - s.s, n - 1, dbl);
+    if (r) return [s.l].concat(r);
+  }
+  return null;
+}
+// ============================== CORE END ================================
+
+// ============================== APLIKACE ================================
+const $ = id => document.getElementById(id);
+const START = 501;
+const LS = 'darts501.settings.v1', LSG = 'darts501.game.v1';
+
+let S = {sens:75, settle:5, tipH:2, doubleOut:true, flip:false, speak:false, names:['Hráč 1','Hráč 2','Hráč 3','Hráč 4','Hráč 5','Hráč 6'], count:2, cal:null, big:true};
+try { const j = JSON.parse(localStorage.getItem(LS) || 'null'); if (j) S = Object.assign(S, j); } catch(e){}
+for (let i = 0; i < 6; i++) if (!S.names[i]) S.names[i] = 'Hráč ' + (i + 1);
+function saveS(){ try { localStorage.setItem(LS, JSON.stringify(S)); } catch(e){} }
+
+// ---------- hra ----------
+let G = null, undoStack = [];
+function mkPlayer(name){ return {name, rem:START, legs:0, darts:0, last:0}; }
+function mkTurn(p){ return {darts:[], startRem:p.rem, dartsStart:p.darts, bust:false, win:false, done:false}; }
+function newGame(n){
+  n = Math.max(2, Math.min(6, n || S.count || 2)); S.count = n; saveS();
+  G = {players:S.names.slice(0, n).map(mkPlayer), cur:0, starter:0, over:null, turn:null};
+  G.turn = mkTurn(G.players[0]); undoStack = []; saveG();
+}
+function saveG(){ try { localStorage.setItem(LSG, JSON.stringify(G)); } catch(e){} }
+function loadG(){
+  try {
+    const j = JSON.parse(localStorage.getItem(LSG) || 'null');
+    if (j && j.players && j.players.length >= 2 && j.players.length <= 6 && j.turn) { G = j; G.over = null; return true; }
+  } catch(e){}
+  return false;
+}
+function pushUndo(){ undoStack.push(JSON.stringify(G)); if (undoStack.length > 60) undoStack.shift(); }
+function undo(){
+  if (!undoStack.length) return toast('Není co vracet', true);
+  G = JSON.parse(undoStack.pop()); saveG(); render();
+}
+function evalTurn(){
+  const p = G.players[G.cur], t = G.turn;
+  let rem = t.startRem, bust = false, win = false, n = 0;
+  for (const d of t.darts){
+    n++;
+    const nr = rem - d.score;
+    if (nr < 0 || (S.doubleOut && (nr === 1 || (nr === 0 && d.mult !== 2)))){ bust = true; break; }
+    rem = nr;
+    if (nr === 0){ win = true; break; }
+  }
+  t.darts.length = n;
+  t.bust = bust; t.win = win; t.done = bust || win || n >= 3;
+  p.rem = bust ? t.startRem : rem;
+  p.darts = t.dartsStart + n;
+  if (win && !G.over){ G.over = {winner:G.cur}; p.legs++; }
+}
+function turnTotal(){ const t = G.turn; return t.bust ? 0 : t.startRem - G.players[G.cur].rem; }
+function addDart(d){
+  if (G.over || G.turn.done) return false;
+  pushUndo();
+  G.turn.darts.push(d);
+  evalTurn(); saveG(); render(); afterDart();
+  return true;
+}
+function afterDart(){
+  const t = G.turn;
+  if (G.over) { showWin(); speak('Konec lega'); return; }
+  if (t.bust) { speak('Bust'); }
+  else if (t.done) speak(String(turnTotal()));
+}
+function nextTurn(auto){
+  if (G.over) return;
+  const t = G.turn, p = G.players[G.cur];
+  if (auto && !t.done && t.darts.length === 0) return;
+  pushUndo();
+  if (!t.bust && !t.win && t.darts.length < 3 && t.darts.length > 0) p.darts += 3 - t.darts.length;
+  p.last = t.bust ? 0 : t.startRem - p.rem;
+  G.cur = (G.cur + 1) % G.players.length;
+  G.turn = mkTurn(G.players[G.cur]);
+  saveG(); render();
+}
+function nextLeg(){
+  G.players.forEach(p => { p.rem = START; p.darts = 0; p.last = 0; });
+  G.starter = (G.starter + 1) % G.players.length; G.cur = G.starter; G.over = null;
+  G.turn = mkTurn(G.players[G.cur]); undoStack = []; saveG(); render();
+  $('winModal').hidden = true;
+}
+
+// ---------- vykreslení ----------
+function esc(s){ return String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+function render(){
+  const t = G.turn;
+  $('players').className = 'players n' + G.players.length;
+  $('players').innerHTML = G.players.map((p, i) => {
+    const act = i === G.cur && !G.over;
+    const avg = p.darts ? ((START - p.rem) / p.darts * 3) : 0;
+    const k = act ? Math.max(0, 3 - t.darts.length) : 3;
+    const co = findCheckout(p.rem, k, S.doubleOut);
+    return `<div class="pl ${act ? 'active' : ''}">
+      <div class="legs">legy ${p.legs}</div>
+      <div class="pname" data-name="${i}">${esc(p.name)}</div>
+      <div class="rem">${p.rem}</div>
+      <div class="meta">Ø ${avg.toFixed(1)} · poslední ${p.last}</div>
+      <div class="co">${co ? co.join(' · ') : '&nbsp;'}</div>
+    </div>`;
+  }).join('');
+  const p = G.players[G.cur];
+  $('turnWho').innerHTML = `<b>${esc(p.name)}</b> · šipka ${Math.min(t.darts.length + 1, 3)}/3`;
+  $('turnTotal').innerHTML = `kolo: <b>${turnTotal()}</b>`;
+  let chips = '';
+  for (let i = 0; i < 3; i++){
+    const d = t.darts[i];
+    if (d) chips += `<button class="chip ${d.src === 'cam' ? 'cam' : 'man'}" data-edit="${i}"><b>${d.label}</b><small>${d.score}</small></button>`;
+    else if (!t.done && i === t.darts.length) chips += `<button class="chip add" data-add="1">＋ ručně</button>`;
+    else chips += `<div class="chip empty">–</div>`;
+  }
+  $('chips').innerHTML = chips;
+  const b = $('banner');
+  if (t.bust){ b.hidden = false; b.className = 'banner bust'; b.textContent = `BUST – skóre se vrací na ${t.startRem}. Vyndejte šipky.`; }
+  else if (t.done && !G.over){ b.hidden = false; b.className = 'banner info'; b.textContent = 'Vyndejte šipky – po vyjmutí se přepne hráč.'; }
+  else b.hidden = true;
+  $('btnNext').textContent = (t.done ? 'Další hráč ▶' : 'Přeskočit ▶');
+  updateStatus();
+}
+let toastT = 0;
+function toast(msg, warn){
+  let el = document.querySelector('.toast');
+  if (!el){ el = document.createElement('div'); document.body.appendChild(el); }
+  el.className = 'toast' + (warn ? ' warn' : ''); el.textContent = msg; el.hidden = false;
+  clearTimeout(toastT); toastT = setTimeout(() => { el.hidden = true; }, 2600);
+}
+function speak(text){
+  if (!S.speak || !('speechSynthesis' in window)) return;
+  try {
+    const u = new SpeechSynthesisUtterance(text); u.lang = 'cs-CZ'; u.rate = 1.0;
+    speechSynthesis.cancel(); speechSynthesis.speak(u);
+  } catch(e){}
+}
+function showWin(){
+  const w = G.players[G.over.winner];
+  $('winTitle').textContent = `${w.name} vyhrál leg!`;
+  const avg = (START / w.darts * 3).toFixed(1);
+  $('winText').textContent = `Šipek v legu: ${w.darts} · průměr ${avg} · legy ${G.players.map(p => p.legs).join(':')}`;
+  $('winModal').hidden = false;
+}
+
+// ---------- ruční zadání ----------
+let pad = {mode:'add', idx:0, mult:1};
+function buildPad(){
+  let h = '';
+  for (let n = 1; n <= 20; n++) h += `<button data-n="${n}">${n}</button>`;
+  $('padNums').innerHTML = h;
+}
+function openPad(mode, idx){
+  pad = {mode, idx, mult:1};
+  $('padTitle').textContent = mode === 'add' ? `Zadat šipku č. ${G.turn.darts.length + 1}` : `Opravit šipku č. ${idx + 1}`;
+  $('padDelete').style.display = mode === 'edit' ? '' : 'none';
+  setMult(1); $('padModal').hidden = false;
+}
+function setMult(m){
+  pad.mult = m;
+  document.querySelectorAll('#multRow button').forEach(b => b.classList.toggle('on', +b.dataset.m === m));
+}
+function padPick(n){
+  let d;
+  if (n === 0) d = makeDart(0, 0);
+  else if (n === 50) d = makeDart(25, 2);
+  else if (n === 25) d = makeDart(25, 1);
+  else d = makeDart(n, pad.mult);
+  d.src = 'manual';
+  $('padModal').hidden = true;
+  if (pad.mode === 'add') addDart(d);
+  else {
+    pushUndo(); G.turn.darts[pad.idx] = d; evalTurn(); saveG(); render(); afterDart();
+  }
+}
+
+// ---------- kamera / vidění ----------
+const vid = $('vid'), ov = $('ov'), octx = ov.getContext('2d');
+const off = document.createElement('canvas'), offc = off.getContext('2d', {willReadFrequently:true});
+const det = new Detector();
+const cur = new Uint8Array(RS * RS * 3);
+let stream = null, facing = 'environment', PW = 0, PH = 0, VW = 0, VH = 0;
+let calPts = [], cal = null, calMode = 'none', temp = null, dragIdx = -1;
+let lastTip = null, lastTipT = 0, wl = null, ticking = false;
+
+function applySettings(){
+  det.sens = S.sens; det.settle = S.settle; det.tipH = S.tipH; det.flip = S.flip;
+}
+function updateSize(){
+  VW = vid.videoWidth; VH = vid.videoHeight;
+  if (!VW || !VH) return;
+  const k = Math.min(1, 1280 / Math.max(VW, VH));
+  PW = Math.round(VW * k); PH = Math.round(VH * k);
+  off.width = PW; off.height = PH;
+  layoutCam();
+  if (S.cal && S.cal.vw === VW && S.cal.vh === VH && S.cal.pts.length === 4 && !calPts.length){
+    calPts = S.cal.pts.map(p => p.slice()); computeCal();
+  } else if (cal && (!S.cal || S.cal.vw !== VW || S.cal.vh !== VH)){
+    cal = null; calPts = [];
+  } else if (calPts.length === 4) computeCal();
+  updateStatus(); drawOverlay();
+}
+function layoutCam(){
+  const wrap = $('camWrap'), box = $('camBox');
+  const vw = VW || 16, vh = VH || 9;
+  const maxW = box.clientWidth || 340;
+  const maxH = Math.round(window.innerHeight * ((S.big || calMode !== 'none') ? 0.55 : 0.24));
+  let w = maxW, h = w * vh / vw;
+  if (h > maxH){ h = maxH; w = h * vw / vh; }
+  if (!VW){ w = maxW; h = 140; }
+  wrap.style.width = Math.round(w) + 'px'; wrap.style.height = Math.round(h) + 'px';
+  const dpr = window.devicePixelRatio || 1;
+  ov.width = Math.round(w * dpr); ov.height = Math.round(h * dpr);
+  drawOverlay();
+}
+async function lockScreen(){ try { if ('wakeLock' in navigator) wl = await navigator.wakeLock.request('screen'); } catch(e){} }
+async function startCamera(){
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){
+    toast('Prohlížeč nepodporuje kameru (je potřeba HTTPS)', true); return;
+  }
+  stopCamera();
+  try {
+    stream = await navigator.mediaDevices.getUserMedia({audio:false, video:{facingMode:{ideal:facing}, width:{ideal:1920}, height:{ideal:1080}, frameRate:{ideal:30}}});
+  } catch(e){
+    toast('Kameru se nepodařilo spustit: ' + (e && e.name || e), true); stream = null; updateStatus(); return;
+  }
+  vid.srcObject = stream;
+  try { await vid.play(); } catch(e){}
+  $('camPh').hidden = true;
+  $('btnCam').textContent = '⏹ Vypnout kameru';
+  lockScreen();
+  if (vid.videoWidth) updateSize();
+  updateStatus();
+}
+function stopCamera(){
+  if (stream){ stream.getTracks().forEach(t => t.stop()); stream = null; }
+  vid.srcObject = null; $('camPh').hidden = false; $('btnCam').textContent = '📷 Spustit kameru';
+  det.clearBaseline(); updateStatus(); drawOverlay();
+  try { if (wl) wl.release(); } catch(e){} wl = null;
+}
+vid.addEventListener('loadedmetadata', updateSize);
+vid.addEventListener('resize', updateSize);
+window.addEventListener('resize', layoutCam);
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && stream) lockScreen(); });
+
+function computeCal(){
+  cal = null;
+  if (calPts.length !== 4 || !PW) return;
+  const img = calPts.map(p => [p[0] * PW, p[1] * PH]);
+  const b = buildCalibration(img);
+  if (!b) return;
+  const lut = buildLUT(b.Hbi, PW, PH);
+  const foot = cameraFoot(b.Hbi, PW, PH);
+  cal = {Hbi:b.Hbi, Hib:b.Hib, lut, foot};
+  det.setFoot(foot);
+  det.clearBaseline();
+}
+const CAL_TEXT = [
+  'Bod 1/4: vnější okraj dvojitého (nejvzdálenějšího) pole na drátu mezi čísly 20 a 1.',
+  'Bod 2/4: vnější okraj dvojitého pole na drátu mezi čísly 6 a 13.',
+  'Bod 3/4: vnější okraj dvojitého pole na drátu mezi čísly 3 a 19.',
+  'Bod 4/4: vnější okraj dvojitého pole na drátu mezi čísly 11 a 8.'
+];
+function startCalibration(){
+  if (!stream){ toast('Nejdřív spusťte kameru', true); return; }
+  calPts = []; cal = null; temp = null; calMode = 'place'; det.clearBaseline();
+  S.big = true; layoutCam(); updateCalHelp(); updateStatus(); drawOverlay();
+  $('camWrap').scrollIntoView({block:'nearest'});
+}
+function updateCalHelp(){
+  const box = $('calHelp');
+  if (calMode === 'none'){ box.hidden = true; ov.style.touchAction = 'auto'; return; }
+  box.hidden = false; ov.style.touchAction = 'none';
+  const txt = $('calText');
+  if (calMode === 'place'){
+    txt.innerHTML = `<b>${CAL_TEXT[Math.min(calPts.length, 3)]}</b><br>Stiskněte a držte prst, v lupě doladíte polohu, pustením bod potvrdíte. Určujte podle čísel na terči (20 nahoře), ne podle okraje obrazovky.`;
+  } else {
+    txt.innerHTML = '<b>Zkontrolujte zelený překryv.</b> Kruhy a čáry musí ležet přesně na drátech terče, čísla musí sedět. Body můžete přetáhnout. Pak vyjměte šipky a klepněte na „Terč je prázdný“.';
+  }
+  drawGuide();
+}
+function drawGuide(){
+  const c = $('guide'), g = c.getContext('2d'), W = c.width, cx = W / 2, rr = W * 0.42;
+  g.clearRect(0, 0, W, W);
+  g.fillStyle = '#10151c'; g.beginPath(); g.arc(cx, cx, rr, 0, 7); g.fill();
+  g.strokeStyle = '#3a4350'; g.lineWidth = 1.5;
+  for (let k = 0; k < 20; k++){
+    const t = (9 + 18 * k) * Math.PI / 180;
+    g.beginPath(); g.moveTo(cx, cx); g.lineTo(cx + rr * Math.sin(t), cx - rr * Math.cos(t)); g.stroke();
+  }
+  g.beginPath(); g.arc(cx, cx, rr, 0, 7); g.stroke();
+  g.fillStyle = '#8b97a7'; g.font = '13px sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle';
+  for (let k = 0; k < 20; k++){
+    const t = 18 * k * Math.PI / 180, r2 = rr * 1.14;
+    g.fillText(NUMBERS[k], cx + r2 * Math.sin(t), cx - r2 * Math.cos(t));
+  }
+  CAL_ANGLES.forEach((a, i) => {
+    const t = a * Math.PI / 180, x = cx + rr * Math.sin(t), y = cx - rr * Math.cos(t);
+    const active = calMode === 'place' && i === calPts.length, done = i < calPts.length || calMode === 'adjust';
+    g.beginPath(); g.arc(x, y, active ? 8 : 5, 0, 7);
+    g.fillStyle = active ? '#ffb020' : (done ? '#3ddc84' : '#566070'); g.fill();
+  });
+}
+
+// ---------- překryv ----------
+function proj(X, Y, w, h){
+  const q = applyH(cal.Hbi, X, Y);
+  return [q[0] / PW * w, q[1] / PH * h];
+}
+function drawOverlay(){
+  const w = ov.width, h = ov.height;
+  octx.clearRect(0, 0, w, h);
+  if (!w) return;
+  const dpr = window.devicePixelRatio || 1;
+  if (cal){
+    octx.lineWidth = Math.max(1, 1.2 * dpr);
+    octx.strokeStyle = calMode === 'adjust' ? 'rgba(61,220,132,.95)' : 'rgba(61,220,132,.5)';
+    for (const r of [R.BULL_IN, R.BULL_OUT, R.TRI_IN, R.TRI_OUT, R.DBL_IN, R.DBL_OUT]){
+      octx.beginPath();
+      for (let i = 0; i <= 72; i++){
+        const t = i * Math.PI / 36, q = proj(r * Math.sin(t), -r * Math.cos(t), w, h);
+        if (i) octx.lineTo(q[0], q[1]); else octx.moveTo(q[0], q[1]);
+      }
+      octx.stroke();
+    }
+    octx.strokeStyle = calMode === 'adjust' ? 'rgba(61,220,132,.6)' : 'rgba(61,220,132,.28)';
+    for (let k = 0; k < 20; k++){
+      const t = (9 + 18 * k) * Math.PI / 180;
+      const a = proj(R.BULL_OUT * Math.sin(t), -R.BULL_OUT * Math.cos(t), w, h);
+      const b = proj(R.DBL_OUT * Math.sin(t), -R.DBL_OUT * Math.cos(t), w, h);
+      octx.beginPath(); octx.moveTo(a[0], a[1]); octx.lineTo(b[0], b[1]); octx.stroke();
+    }
+    if (calMode === 'adjust'){
+      octx.font = `bold ${Math.round(13 * dpr)}px sans-serif`; octx.textAlign = 'center'; octx.textBaseline = 'middle';
+      octx.fillStyle = '#fff'; octx.strokeStyle = '#000'; octx.lineWidth = 3 * dpr;
+      for (let k = 0; k < 20; k++){
+        const t = 18 * k * Math.PI / 180, q = proj(184 * Math.sin(t), -184 * Math.cos(t), w, h);
+        octx.strokeText(NUMBERS[k], q[0], q[1]); octx.fillText(NUMBERS[k], q[0], q[1]);
+      }
+    }
+  }
+  if (calMode !== 'none' || !cal){
+    const pts = calPts.concat(temp ? [temp] : []);
+    pts.forEach((p, i) => {
+      const x = p[0] * w, y = p[1] * h;
+      octx.beginPath(); octx.arc(x, y, 9 * dpr, 0, 7);
+      octx.fillStyle = (temp && i === pts.length - 1) ? 'rgba(255,176,32,.85)' : 'rgba(255,255,255,.85)'; octx.fill();
+      octx.fillStyle = '#000'; octx.font = `bold ${Math.round(11 * dpr)}px sans-serif`;
+      octx.textAlign = 'center'; octx.textBaseline = 'middle'; octx.fillText(i + 1, x, y);
+    });
+  }
+  if (lastTip && cal && Date.now() - lastTipT < 7000){
+    const q = proj(lastTip.x, lastTip.y, w, h);
+    octx.strokeStyle = '#ff3b3b'; octx.lineWidth = 2.5 * dpr;
+    octx.beginPath(); octx.arc(q[0], q[1], 10 * dpr, 0, 7); octx.moveTo(q[0] - 16 * dpr, q[1]); octx.lineTo(q[0] + 16 * dpr, q[1]);
+    octx.moveTo(q[0], q[1] - 16 * dpr); octx.lineTo(q[0], q[1] + 16 * dpr); octx.stroke();
+  }
+}
+function drawLoupe(nx, ny){
+  const lp = $('loupe'), g = lp.getContext('2d');
+  lp.hidden = false;
+  lp.style.left = nx < 0.5 ? 'auto' : '8px'; lp.style.right = nx < 0.5 ? '8px' : 'auto';
+  const s = 32 * (VW / PW || 1), sx = nx * VW - s / 2, sy = ny * VH - s / 2;
+  g.fillStyle = '#000'; g.fillRect(0, 0, 140, 140);
+  try { g.drawImage(vid, sx, sy, s, s, 0, 0, 140, 140); } catch(e){}
+  g.strokeStyle = 'rgba(255,60,60,.95)'; g.lineWidth = 1.5;
+  g.beginPath(); g.moveTo(70, 0); g.lineTo(70, 140); g.moveTo(0, 70); g.lineTo(140, 70); g.stroke();
+}
+function ptr(e){
+  const r = ov.getBoundingClientRect();
+  return [Math.min(1, Math.max(0, (e.clientX - r.left) / r.width)), Math.min(1, Math.max(0, (e.clientY - r.top) / r.height)), r];
+}
+ov.addEventListener('pointerdown', e => {
+  if (calMode === 'none' || !VW) return;
+  const [nx, ny, r] = ptr(e);
+  if (calMode === 'place'){ temp = [nx, ny]; drawLoupe(nx, ny); }
+  else if (calMode === 'adjust'){
+    let best = -1, bd = 40;
+    calPts.forEach((p, i) => { const d = Math.hypot((p[0] - nx) * r.width, (p[1] - ny) * r.height); if (d < bd){ bd = d; best = i; } });
+    if (best >= 0){ dragIdx = best; calPts[best] = [nx, ny]; drawLoupe(nx, ny); }
+  }
+  try { ov.setPointerCapture(e.pointerId); } catch(_){}
+  e.preventDefault(); drawOverlay();
+});
+ov.addEventListener('pointermove', e => {
+  if (calMode === 'none') return;
+  const [nx, ny] = ptr(e);
+  if (calMode === 'place' && temp){ temp = [nx, ny]; drawLoupe(nx, ny); drawOverlay(); }
+  else if (calMode === 'adjust' && dragIdx >= 0){ calPts[dragIdx] = [nx, ny]; drawLoupe(nx, ny); drawOverlay(); }
+});
+function endPointer(){
+  $('loupe').hidden = true;
+  if (calMode === 'place' && temp){
+    calPts.push(temp); temp = null;
+    if (calPts.length === 4){ calMode = 'adjust'; computeCal(); saveCal(); }
+    updateCalHelp(); updateStatus(); drawOverlay();
+  } else if (calMode === 'adjust' && dragIdx >= 0){
+    dragIdx = -1; computeCal(); saveCal(); updateStatus(); drawOverlay();
+  }
+}
+ov.addEventListener('pointerup', endPointer);
+ov.addEventListener('pointercancel', () => { temp = null; dragIdx = -1; $('loupe').hidden = true; drawOverlay(); });
+function saveCal(){ S.cal = {pts:calPts.map(p => p.slice()), vw:VW, vh:VH}; saveS(); }
+
+// ---------- základ (prázdný terč) ----------
+function captureRect(){
+  if (!cal || !PW || vid.readyState < 2) return false;
+  offc.drawImage(vid, 0, 0, PW, PH);
+  rectify(offc.getImageData(0, 0, PW, PH).data, cal.lut, cur);
+  return true;
+}
+function setBaseline(){
+  if (!stream) return toast('Nejdřív spusťte kameru', true);
+  if (!cal) return toast('Nejdřív proveďte kalibraci', true);
+  if (calMode !== 'none'){ calMode = 'none'; updateCalHelp(); layoutCam(); }
+  if (!captureRect()) return toast('Obraz z kamery ještě není připraven', true);
+  det.setBaseline(cur); applySettings();
+  toast('Základ nastaven – můžete házet'); updateStatus(); drawOverlay();
+}
+
+// ---------- hlavní smyčka ----------
+let detState = 'nobase';
+function tick(){
+  if (ticking || document.hidden || !stream || !cal || calMode !== 'none') return;
+  if (!$('padModal').hidden || !$('winModal').hidden) return;
+  ticking = true;
+  try {
+    if (!captureRect()) return;
+    const r = det.step(cur);
+    if (r.state !== detState){ detState = r.state; updateStatus(); }
+    if (r.event === 'empty') onEmpty();
+    if (r.event === 'dart') r.darts.forEach(onDart);
+    if (!$('dbgBox').hidden) drawDebug();
+    if (lastTip && Date.now() - lastTipT > 7000 && Date.now() - lastTipT < 7300) drawOverlay();
+  } finally { ticking = false; }
+}
+function onEmpty(){
+  if (G.over) return;
+  if (G.turn.done || G.turn.darts.length > 0) nextTurn(true);
+}
+function onDart(d){
+  const sc = scorePoint(d.x, d.y);
+  lastTip = {x:d.x, y:d.y}; lastTipT = Date.now(); drawOverlay();
+  if (G.over) return;
+  if (G.turn.done){ toast('Šipka navíc (kolo už je hotové) – ignoruji', true); return; }
+  if (G.turn.darts.some(o => o.pos && Math.hypot(o.pos.x - d.x, o.pos.y - d.y) < 6)) return;
+  const dart = Object.assign({}, sc, {pos:{x:Math.round(d.x * 10) / 10, y:Math.round(d.y * 10) / 10}, src:'cam'});
+  if (addDart(dart)){
+    toast(`${dart.label}  (${dart.score})`);
+    if (navigator.vibrate) try { navigator.vibrate(60); } catch(e){}
+  }
+}
+function updateStatus(){
+  let c = 'bad', t;
+  if (!stream) { c = ''; t = 'Kamera vypnutá – skóre lze zadávat ručně'; }
+  else if (calMode === 'place') { c = 'warn'; t = 'Kalibrace: ' + CAL_TEXT[Math.min(calPts.length, 3)]; }
+  else if (!cal) t = 'Chybí kalibrace – klepněte na „Kalibrace“';
+  else if (calMode === 'adjust') { c = 'warn'; t = 'Zkontrolujte překryv, pak vyjměte šipky a klepněte na „Terč je prázdný“'; }
+  else if (!det.emptyRef) t = 'Vyjměte šipky z terče a klepněte na „Terč je prázdný“';
+  else if (detState === 'moving') { c = 'warn'; t = 'Pohyb v záběru…'; }
+  else if (detState === 'settling') { c = 'warn'; t = 'Čekám na ustálení…'; }
+  else if (detState === 'blocked') { c = 'bad'; t = 'Velká změna v záběru (ruka? posunutá kamera?) – počkejte, nebo klepněte na „Terč je prázdný“'; }
+  else { c = 'ok'; t = G && G.over ? 'Leg skončil' : 'Připraveno – házejte'; }
+  $('dot').className = 'dot ' + c; $('status').textContent = t;
+}
+const dbgc = $('dbg'), dctx = dbgc.getContext('2d'), dimg = dctx.createImageData(RS, RS);
+function drawDebug(){
+  const d = dimg.data;
+  for (let p = 0, j = 0, k = 0; p < RS * RS; p++, j += 3, k += 4){
+    d[k] = cur[j]; d[k+1] = cur[j+1]; d[k+2] = cur[j+2]; d[k+3] = 255;
+    if (det.mask[p]){ d[k] = 255; d[k+1] = d[k+1] * 0.4; d[k+2] = d[k+2] * 0.4; }
+  }
+  dctx.putImageData(dimg, 0, 0);
+  dctx.strokeStyle = 'rgba(61,220,132,.9)'; dctx.lineWidth = 1;
+  for (const r of [R.BULL_OUT, R.TRI_IN, R.TRI_OUT, R.DBL_IN, R.DBL_OUT]){ dctx.beginPath(); dctx.arc(CEN, CEN, r * SC, 0, 7); dctx.stroke(); }
+  const fp = det.footPx();
+  const vx = fp.x - CEN, vy = fp.y - CEN, vl = Math.hypot(vx, vy) || 1, k = Math.min(1, 220 / vl);
+  dctx.strokeStyle = '#4aa3ff'; dctx.lineWidth = 2; dctx.beginPath(); dctx.moveTo(CEN, CEN); dctx.lineTo(CEN + vx * k, CEN + vy * k); dctx.stroke();
+  if (lastTip){ const x = CEN + lastTip.x * SC, y = CEN + lastTip.y * SC; dctx.strokeStyle = '#ff3b3b'; dctx.lineWidth = 2; dctx.beginPath(); dctx.arc(x, y, 8, 0, 7); dctx.stroke(); }
+  $('dbgInfo').textContent = `stav: ${detState}\nzměněných pixelů: ${det.info.total}, bloků: ${det.info.comps}\n` +
+    `kamera (pata) v mm: x=${det.foot.x.toFixed(0)} y=${det.foot.y.toFixed(0)} vzdálenost od terče≈${Math.abs(cal ? cal.foot.z : 0).toFixed(0)}\n` +
+    (lastTip ? `poslední špička: x=${lastTip.x.toFixed(1)} y=${lastTip.y.toFixed(1)} mm` : '') +
+    `\nModrá čára ukazuje směr ke kameře (špička = konec šipky blíž k ní). Červeně změny proti základu.`;
+}
+
+// ---------- ovládání ----------
+function bind(){
+  $('players').addEventListener('click', e => {
+    const n = e.target.closest('[data-name]');
+    if (!n) return;
+    const i = +n.dataset.name, v = prompt('Jméno hráče', G.players[i].name);
+    if (v && v.trim()){ G.players[i].name = v.trim().slice(0, 18); S.names[i] = G.players[i].name; saveS(); saveG(); render(); }
+  });
+  $('chips').addEventListener('click', e => {
+    const b = e.target.closest('button'); if (!b) return;
+    if (b.dataset.add) openPad('add'); else if (b.dataset.edit !== undefined) openPad('edit', +b.dataset.edit);
+  });
+  document.querySelectorAll('#multRow button').forEach(b => b.addEventListener('click', () => setMult(+b.dataset.m)));
+  $('padNums').addEventListener('click', e => { const b = e.target.closest('button'); if (b) padPick(+b.dataset.n); });
+  document.querySelector('.pad2').addEventListener('click', e => { const b = e.target.closest('button'); if (b) padPick(+b.dataset.n); });
+  $('padCancel').onclick = () => { $('padModal').hidden = true; };
+  $('padDelete').onclick = () => {
+    $('padModal').hidden = true; pushUndo(); G.turn.darts.splice(pad.idx, 1); evalTurn(); saveG(); render();
+  };
+  $('btnUndo').onclick = undo;
+  $('btnNext').onclick = () => nextTurn(false);
+  $('btnNew').onclick = () => {
+    document.querySelectorAll('#newCount button').forEach(b => b.classList.toggle('on', +b.dataset.n === G.players.length));
+    $('newModal').hidden = false;
+  };
+  $('newCount').addEventListener('click', e => {
+    const b = e.target.closest('button'); if (!b) return;
+    newGame(+b.dataset.n); render(); $('newModal').hidden = true;
+  });
+  $('newCancel').onclick = () => { $('newModal').hidden = true; };
+  $('winNext').onclick = nextLeg;
+  $('winUndo').onclick = () => { $('winModal').hidden = true; undo(); };
+  $('btnCam').onclick = () => stream ? stopCamera() : startCamera();
+  $('btnCal').onclick = startCalibration;
+  $('btnBase').onclick = setBaseline;
+  $('btnSwitch').onclick = () => { facing = facing === 'environment' ? 'user' : 'environment'; if (stream) startCamera(); else toast('Přepnuto: ' + (facing === 'user' ? 'přední kamera' : 'zadní kamera')); };
+  $('btnSize').onclick = () => { S.big = !S.big; saveS(); layoutCam(); };
+  $('btnDbg').onclick = () => { $('dbgBox').hidden = !$('dbgBox').hidden; if (!$('dbgBox').hidden && cal && stream){ captureRect(); drawDebug(); } };
+  $('btnSettings').onclick = () => {
+    $('setDouble').checked = S.doubleOut; $('setSpeak').checked = S.speak; $('setFlip').checked = S.flip;
+    $('setSens').value = S.sens; $('setSettle').value = S.settle; $('setShift').value = S.tipH;
+    syncSetLabels(); $('setModal').hidden = false;
+  };
+  const syncSetLabels = () => { $('setSensV').textContent = $('setSens').value; $('setSettleV').textContent = $('setSettle').value; $('setShiftV').textContent = $('setShift').value; };
+  ['setSens', 'setSettle', 'setShift'].forEach(id => $(id).addEventListener('input', syncSetLabels));
+  $('setClose').onclick = () => {
+    S.doubleOut = $('setDouble').checked; S.speak = $('setSpeak').checked; S.flip = $('setFlip').checked;
+    S.sens = +$('setSens').value; S.settle = +$('setSettle').value; S.tipH = +$('setShift').value;
+    saveS(); applySettings(); if (G && !G.over && G.turn) { evalTurn(); saveG(); } render(); $('setModal').hidden = true;
+  };
+  [$('padModal'), $('setModal'), $('newModal')].forEach(m => m.addEventListener('click', e => { if (e.target === m) m.hidden = true; }));
+}
+
+// ---------- start ----------
+buildPad(); bind(); applySettings();
+if (!loadG()) newGame();
+render(); layoutCam();
+setInterval(tick, 110);
+if (/[?&]test\b/.test(location.search)){
+  window.__darts = {det, get G(){ return G; }, get cal(){ return cal; }, S, scorePoint, tick, startCamera, computeCal,
+    setCal(pts){ calPts = pts; calMode = 'none'; computeCal(); }, setBaseline, get state(){ return detState; }, get calPts(){ return calPts; }};
+}
+</script>
+</body>
+</html>
