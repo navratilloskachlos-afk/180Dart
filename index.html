@@ -5,9 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="Šipky 501">
+<meta name="apple-mobile-web-app-title" content="Šipky">
 <meta name="theme-color" content="#0e1116">
-<title>Šipky 501</title>
+<title>Šipky</title>
 <style>
 :root{--bg:#0e1116;--card:#171c24;--card2:#1e2530;--line:#2a313c;--txt:#e8edf3;--mut:#8b97a7;--acc:#3ddc84;--warn:#ffb020;--bad:#ff5a5f;--blue:#4aa3ff}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
@@ -85,6 +85,7 @@ button[disabled]{opacity:.45}
 .field{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:12px 0;font-size:15px}
 .field input[type=range]{flex:1;max-width:55%}
 .field small{color:var(--mut);display:block;font-size:12px}
+.ngh{margin:10px 0 5px;color:var(--mut);font-size:13px}
 .win{text-align:center}
 .win .big{font-size:44px;margin:4px 0}
 .win p{color:var(--mut)}
@@ -93,7 +94,7 @@ button[disabled]{opacity:.45}
 <body>
 <div id="app">
   <header class="top">
-    <h1>🎯 Šipky 501</h1>
+    <h1 id="title">🎯 Šipky 501</h1>
     <button id="btnSettings" class="ghost" aria-label="Nastavení">⚙ Nastavení</button>
   </header>
 
@@ -163,7 +164,6 @@ button[disabled]{opacity:.45}
 <div id="setModal" class="modal" hidden>
   <div class="sheet">
     <h2>Nastavení</h2>
-    <div class="field"><span>Double-out<small>Leg musí skončit zásahem do double / bullu</small></span><input type="checkbox" id="setDouble"></div>
     <div class="field"><span>Hlasový výstup<small>Přečte skóre kola (čeština)</small></span><input type="checkbox" id="setSpeak"></div>
     <div class="field"><span>Citlivost kamery<small>Nižší číslo = citlivější</small></span><input type="range" id="setSens" min="30" max="160" step="5"><b id="setSensV"></b></div>
     <div class="field"><span>Doba ustálení<small>Kolik snímků bez pohybu před vyhodnocením</small></span><input type="range" id="setSettle" min="3" max="12" step="1"><b id="setSettleV"></b></div>
@@ -175,12 +175,28 @@ button[disabled]{opacity:.45}
 
 <div id="newModal" class="modal" hidden>
   <div class="sheet">
-    <h2>Nová hra – počet hráčů</h2>
-    <p style="margin:0 0 10px;color:var(--mut);font-size:14px">Aktuální skóre se smaže. Jména hráčů změníte klepnutím na jméno.</p>
-    <div class="mult" id="newCount" style="grid-template-columns:repeat(5,1fr)">
-      <button data-n="2">2</button><button data-n="3">3</button><button data-n="4">4</button><button data-n="5">5</button><button data-n="6">6</button>
+    <h2>Nová hra</h2>
+    <div class="ngh">Hra</div>
+    <div class="mult" style="grid-template-columns:repeat(3,1fr)">
+      <button data-k="mode" data-v="x01">X01</button><button data-k="mode" data-v="countup">Count-up</button><button data-k="mode" data-v="atc">Around the Clock</button>
     </div>
-    <div class="row"><button id="newCancel" class="ghost">Zrušit</button></div>
+    <div id="ngX01">
+      <div class="ngh">Začátek</div>
+      <div class="mult"><button data-k="start" data-v="301">301</button><button data-k="start" data-v="501">501</button><button data-k="start" data-v="701">701</button></div>
+      <div class="ngh">Ukončení</div>
+      <div class="mult" style="grid-template-columns:1fr 1fr"><button data-k="out" data-v="double">Double-out</button><button data-k="out" data-v="straight">Bez double</button></div>
+    </div>
+    <div id="ngCU">
+      <div class="ngh">Počet kol</div>
+      <div class="mult"><button data-k="rounds" data-v="5">5</button><button data-k="rounds" data-v="8">8</button><button data-k="rounds" data-v="10">10</button></div>
+    </div>
+    <div id="ngAT" class="ngh" style="margin-top:8px">Trefujte čísla 1 až 20 po řadě, nakonec Bull. Vyhrává, kdo je první.</div>
+    <div class="ngh">Počet hráčů</div>
+    <div class="mult" style="grid-template-columns:repeat(5,1fr)">
+      <button data-k="n" data-v="2">2</button><button data-k="n" data-v="3">3</button><button data-k="n" data-v="4">4</button><button data-k="n" data-v="5">5</button><button data-k="n" data-v="6">6</button>
+    </div>
+    <p style="margin:10px 0 0;color:var(--mut);font-size:13px">Aktuální hra se smaže. Jména hráčů změníte klepnutím na jméno.</p>
+    <div class="row"><button id="newCancel" class="ghost">Zrušit</button><button id="ngGo" class="primary">Začít hru</button></div>
   </div>
 </div>
 
@@ -510,7 +526,7 @@ const COSEGS = (() => {
 })();
 const coCache = new Map();
 function findCheckout(rem, k, dbl){
-  if (rem < 2 || rem > 170 || k < 1) return null;
+  if (rem < (dbl ? 2 : 1) || rem > (dbl ? 170 : 180) || k < 1) return null;
   const key = rem + '|' + k + '|' + dbl;
   if (coCache.has(key)) return coCache.get(key);
   let res = null;
@@ -534,28 +550,33 @@ function coSearch(rem, n, dbl){
 
 // ============================== APLIKACE ================================
 const $ = id => document.getElementById(id);
-const START = 501;
-const LS = 'darts501.settings.v1', LSG = 'darts501.game.v1';
+const LS = 'darts501.settings.v1', LSG = 'darts501.game.v2';
 
-let S = {sens:75, settle:5, tipH:2, doubleOut:true, flip:false, speak:false, names:['Hráč 1','Hráč 2','Hráč 3','Hráč 4','Hráč 5','Hráč 6'], count:2, cal:null, big:true};
+let S = {mode:'x01', start:501, out:'double', rounds:8, sens:75, settle:5, tipH:2, flip:false, speak:false, names:['Hráč 1','Hráč 2','Hráč 3','Hráč 4','Hráč 5','Hráč 6'], count:2, cal:null, big:true};
 try { const j = JSON.parse(localStorage.getItem(LS) || 'null'); if (j) S = Object.assign(S, j); } catch(e){}
 for (let i = 0; i < 6; i++) if (!S.names[i]) S.names[i] = 'Hráč ' + (i + 1);
 function saveS(){ try { localStorage.setItem(LS, JSON.stringify(S)); } catch(e){} }
 
 // ---------- hra ----------
 let G = null, undoStack = [];
-function mkPlayer(name){ return {name, rem:START, legs:0, darts:0, last:0}; }
-function mkTurn(p){ return {darts:[], startRem:p.rem, dartsStart:p.darts, bust:false, win:false, done:false}; }
-function newGame(n){
-  n = Math.max(2, Math.min(6, n || S.count || 2)); S.count = n; saveS();
-  G = {players:S.names.slice(0, n).map(mkPlayer), cur:0, starter:0, over:null, turn:null};
+function mkPlayer(name){ return {name, legs:0, darts:0, last:0, rem:0, score:0, target:1}; }
+function resetPlayer(p){ p.darts = 0; p.last = 0; p.rem = G.opts.start; p.score = 0; p.target = 1; }
+function snap(p){ return {rem:p.rem, score:p.score, target:p.target, darts:p.darts}; }
+function mkTurn(p){ return {darts:[], start:snap(p), bust:false, win:false, done:false}; }
+function newGame(mode, opts, n){
+  mode = mode || S.mode;
+  opts = Object.assign({start:S.start, out:S.out, rounds:S.rounds}, opts || {});
+  n = Math.max(2, Math.min(6, n || S.count || 2));
+  Object.assign(S, {mode, start:opts.start, out:opts.out, rounds:opts.rounds, count:n}); saveS();
+  G = {mode, opts, players:S.names.slice(0, n).map(mkPlayer), cur:0, starter:0, turnNo:0, over:null, turn:null};
+  G.players.forEach(resetPlayer);
   G.turn = mkTurn(G.players[0]); undoStack = []; saveG();
 }
 function saveG(){ try { localStorage.setItem(LSG, JSON.stringify(G)); } catch(e){} }
 function loadG(){
   try {
     const j = JSON.parse(localStorage.getItem(LSG) || 'null');
-    if (j && j.players && j.players.length >= 2 && j.players.length <= 6 && j.turn) { G = j; G.over = null; return true; }
+    if (j && j.mode && j.opts && j.players && j.players.length >= 2 && j.players.length <= 6 && j.turn && j.turn.start) { G = j; G.over = null; return true; }
   } catch(e){}
   return false;
 }
@@ -564,23 +585,59 @@ function undo(){
   if (!undoStack.length) return toast('Není co vracet', true);
   G = JSON.parse(undoStack.pop()); saveG(); render();
 }
+function atcHit(d, tg){ return tg <= 20 ? (d.num === tg && d.mult > 0) : d.num === 25; }
+function atcLabel(tg){ return tg <= 20 ? String(tg) : tg === 21 ? 'Bull' : '✓'; }
+function modeTitle(){
+  const o = G.opts;
+  if (G.mode === 'x01') return `${o.start} · ${o.out === 'double' ? 'double-out' : 'bez double'}`;
+  if (G.mode === 'countup') return `Count-up · ${o.rounds} kol`;
+  return 'Around the Clock';
+}
 function evalTurn(){
-  const p = G.players[G.cur], t = G.turn;
-  let rem = t.startRem, bust = false, win = false, n = 0;
-  for (const d of t.darts){
-    n++;
-    const nr = rem - d.score;
-    if (nr < 0 || (S.doubleOut && (nr === 1 || (nr === 0 && d.mult !== 2)))){ bust = true; break; }
-    rem = nr;
-    if (nr === 0){ win = true; break; }
+  const p = G.players[G.cur], t = G.turn, s = t.start, o = G.opts;
+  let bust = false, win = false, n = 0;
+  if (G.mode === 'x01'){
+    let rem = s.rem;
+    for (const d of t.darts){
+      n++;
+      const nr = rem - d.score;
+      if (nr < 0 || (o.out === 'double' && (nr === 1 || (nr === 0 && d.mult !== 2)))){ bust = true; break; }
+      rem = nr;
+      if (nr === 0){ win = true; break; }
+    }
+    p.rem = bust ? s.rem : rem;
+  } else if (G.mode === 'countup'){
+    let sc = s.score;
+    for (const d of t.darts){ n++; sc += d.score; }
+    p.score = sc;
+  } else {
+    let tg = s.target;
+    for (const d of t.darts){
+      n++;
+      if (atcHit(d, tg)){
+        if (tg <= 20) tg++; else { tg = 22; win = true; break; }
+      }
+    }
+    p.target = tg;
   }
   t.darts.length = n;
   t.bust = bust; t.win = win; t.done = bust || win || n >= 3;
-  p.rem = bust ? t.startRem : rem;
-  p.darts = t.dartsStart + n;
-  if (win && !G.over){ G.over = {winner:G.cur}; p.legs++; }
+  p.darts = s.darts + n;
+  if (win && !G.over){ G.over = {winners:[G.cur]}; p.legs++; }
+  if (G.mode === 'countup' && t.done && !G.over && G.turnNo === o.rounds * G.players.length - 1) finishCountUp();
 }
-function turnTotal(){ const t = G.turn; return t.bust ? 0 : t.startRem - G.players[G.cur].rem; }
+function finishCountUp(){
+  if (G.over) return;
+  const max = Math.max(...G.players.map(p => p.score));
+  const w = G.players.map((p, i) => p.score === max ? i : -1).filter(i => i >= 0);
+  G.over = {winners:w}; w.forEach(i => G.players[i].legs++);
+}
+function turnTotal(){
+  const t = G.turn, p = G.players[G.cur], s = t.start;
+  if (G.mode === 'x01') return t.bust ? 0 : s.rem - p.rem;
+  if (G.mode === 'countup') return p.score - s.score;
+  return Math.min(p.target, 21) - s.target + (p.target > 21 ? 1 : 0);
+}
 function addDart(d){
   if (G.over || G.turn.done) return false;
   pushUndo();
@@ -590,9 +647,9 @@ function addDart(d){
 }
 function afterDart(){
   const t = G.turn;
-  if (G.over) { showWin(); speak('Konec lega'); return; }
+  if (G.over) { showWin(); speak('Konec hry'); return; }
   if (t.bust) { speak('Bust'); }
-  else if (t.done) speak(String(turnTotal()));
+  else if (t.done && G.mode !== 'atc') speak(String(turnTotal()));
 }
 function nextTurn(auto){
   if (G.over) return;
@@ -600,13 +657,18 @@ function nextTurn(auto){
   if (auto && !t.done && t.darts.length === 0) return;
   pushUndo();
   if (!t.bust && !t.win && t.darts.length < 3 && t.darts.length > 0) p.darts += 3 - t.darts.length;
-  p.last = t.bust ? 0 : t.startRem - p.rem;
+  p.last = turnTotal();
+  G.turnNo++;
+  if (G.mode === 'countup' && G.turnNo >= G.opts.rounds * G.players.length){
+    finishCountUp(); saveG(); render(); showWin(); return;
+  }
   G.cur = (G.cur + 1) % G.players.length;
   G.turn = mkTurn(G.players[G.cur]);
   saveG(); render();
 }
 function nextLeg(){
-  G.players.forEach(p => { p.rem = START; p.darts = 0; p.last = 0; });
+  G.players.forEach(resetPlayer);
+  G.turnNo = 0;
   G.starter = (G.starter + 1) % G.players.length; G.cur = G.starter; G.over = null;
   G.turn = mkTurn(G.players[G.cur]); undoStack = []; saveG(); render();
   $('winModal').hidden = true;
@@ -615,24 +677,36 @@ function nextLeg(){
 // ---------- vykreslení ----------
 function esc(s){ return String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
 function render(){
-  const t = G.turn;
-  $('players').className = 'players n' + G.players.length;
+  const t = G.turn, o = G.opts, n = G.players.length;
+  $('title').textContent = '🎯 ' + modeTitle();
+  $('players').className = 'players n' + n;
   $('players').innerHTML = G.players.map((p, i) => {
     const act = i === G.cur && !G.over;
-    const avg = p.darts ? ((START - p.rem) / p.darts * 3) : 0;
-    const k = act ? Math.max(0, 3 - t.darts.length) : 3;
-    const co = findCheckout(p.rem, k, S.doubleOut);
+    let big, meta, co = '';
+    if (G.mode === 'x01'){
+      const avg = p.darts ? ((o.start - p.rem) / p.darts * 3) : 0;
+      const k = act ? Math.max(0, 3 - t.darts.length) : 3;
+      const c = findCheckout(p.rem, k, o.out === 'double');
+      big = p.rem; meta = `Ø ${avg.toFixed(1)} · poslední ${p.last}`; co = c ? c.join(' · ') : '';
+    } else if (G.mode === 'countup'){
+      const avg = p.darts ? (p.score / p.darts * 3) : 0;
+      big = p.score; meta = `Ø ${avg.toFixed(1)} · poslední ${p.last}`;
+    } else {
+      big = atcLabel(p.target); meta = `šipek ${p.darts} · poslední +${p.last}`;
+      co = p.target <= 21 ? `zbývá ${22 - p.target}` : 'hotovo';
+    }
     return `<div class="pl ${act ? 'active' : ''}">
-      <div class="legs">legy ${p.legs}</div>
+      <div class="legs">výhry ${p.legs}</div>
       <div class="pname" data-name="${i}">${esc(p.name)}</div>
-      <div class="rem">${p.rem}</div>
-      <div class="meta">Ø ${avg.toFixed(1)} · poslední ${p.last}</div>
-      <div class="co">${co ? co.join(' · ') : '&nbsp;'}</div>
+      <div class="rem">${big}</div>
+      <div class="meta">${meta}</div>
+      <div class="co">${co || '&nbsp;'}</div>
     </div>`;
   }).join('');
   const p = G.players[G.cur];
-  $('turnWho').innerHTML = `<b>${esc(p.name)}</b> · šipka ${Math.min(t.darts.length + 1, 3)}/3`;
-  $('turnTotal').innerHTML = `kolo: <b>${turnTotal()}</b>`;
+  const round = Math.min(Math.floor(G.turnNo / n) + 1, o.rounds || 99);
+  $('turnWho').innerHTML = `<b>${esc(p.name)}</b> · šipka ${Math.min(t.darts.length + 1, 3)}/3` + (G.mode === 'countup' ? ` · kolo ${round}/${o.rounds}` : '');
+  $('turnTotal').innerHTML = (G.mode === 'atc' ? 'postup: <b>+' : 'kolo: <b>') + turnTotal() + '</b>';
   let chips = '';
   for (let i = 0; i < 3; i++){
     const d = t.darts[i];
@@ -642,7 +716,7 @@ function render(){
   }
   $('chips').innerHTML = chips;
   const b = $('banner');
-  if (t.bust){ b.hidden = false; b.className = 'banner bust'; b.textContent = `BUST – skóre se vrací na ${t.startRem}. Vyndejte šipky.`; }
+  if (t.bust){ b.hidden = false; b.className = 'banner bust'; b.textContent = `BUST – skóre se vrací na ${t.start.rem}. Vyndejte šipky.`; }
   else if (t.done && !G.over){ b.hidden = false; b.className = 'banner info'; b.textContent = 'Vyndejte šipky – po vyjmutí se přepne hráč.'; }
   else b.hidden = true;
   $('btnNext').textContent = (t.done ? 'Další hráč ▶' : 'Přeskočit ▶');
@@ -663,11 +737,33 @@ function speak(text){
   } catch(e){}
 }
 function showWin(){
-  const w = G.players[G.over.winner];
-  $('winTitle').textContent = `${w.name} vyhrál leg!`;
-  const avg = (START / w.darts * 3).toFixed(1);
-  $('winText').textContent = `Šipek v legu: ${w.darts} · průměr ${avg} · legy ${G.players.map(p => p.legs).join(':')}`;
+  const w = G.over.winners.map(i => G.players[i]);
+  const names = w.map(p => p.name).join(' a ');
+  const wins = G.players.map(p => p.legs).join(':');
+  const f = w[0];
+  if (G.mode === 'countup'){
+    $('winTitle').textContent = w.length > 1 ? `Remíza: ${names}` : `${names} vyhrál!`;
+    $('winText').textContent = `${f.score} bodů · Ø ${(f.darts ? f.score / f.darts * 3 : 0).toFixed(1)} · výhry ${wins}`;
+    $('winNext').textContent = 'Hrát znovu';
+  } else if (G.mode === 'atc'){
+    $('winTitle').textContent = `${names} vyhrál!`;
+    $('winText').textContent = `Šipek: ${f.darts} · výhry ${wins}`;
+    $('winNext').textContent = 'Další hra';
+  } else {
+    $('winTitle').textContent = `${names} vyhrál leg!`;
+    $('winText').textContent = `Šipek v legu: ${f.darts} · průměr ${(G.opts.start / f.darts * 3).toFixed(1)} · legy ${wins}`;
+    $('winNext').textContent = 'Další leg';
+  }
   $('winModal').hidden = false;
+}
+
+let NG = {};
+function renderNG(){
+  document.querySelectorAll('#newModal button[data-k]').forEach(b => {
+    const v = /^\d+$/.test(b.dataset.v) ? +b.dataset.v : b.dataset.v;
+    b.classList.toggle('on', NG[b.dataset.k] === v);
+  });
+  $('ngX01').hidden = NG.mode !== 'x01'; $('ngCU').hidden = NG.mode !== 'countup'; $('ngAT').hidden = NG.mode !== 'atc';
 }
 
 // ---------- ruční zadání ----------
@@ -1032,13 +1128,17 @@ function bind(){
   $('btnUndo').onclick = undo;
   $('btnNext').onclick = () => nextTurn(false);
   $('btnNew').onclick = () => {
-    document.querySelectorAll('#newCount button').forEach(b => b.classList.toggle('on', +b.dataset.n === G.players.length));
-    $('newModal').hidden = false;
+    NG = {mode:G.mode, start:G.opts.start, out:G.opts.out, rounds:G.opts.rounds || 8, n:G.players.length};
+    renderNG(); $('newModal').hidden = false;
   };
-  $('newCount').addEventListener('click', e => {
-    const b = e.target.closest('button'); if (!b) return;
-    newGame(+b.dataset.n); render(); $('newModal').hidden = true;
+  $('newModal').addEventListener('click', e => {
+    const b = e.target.closest('button[data-k]'); if (!b) return;
+    const v = b.dataset.v; NG[b.dataset.k] = /^\d+$/.test(v) ? +v : v; renderNG();
   });
+  $('ngGo').onclick = () => {
+    newGame(NG.mode, {start:NG.start, out:NG.out, rounds:NG.rounds}, NG.n);
+    render(); $('newModal').hidden = true;
+  };
   $('newCancel').onclick = () => { $('newModal').hidden = true; };
   $('winNext').onclick = nextLeg;
   $('winUndo').onclick = () => { $('winModal').hidden = true; undo(); };
@@ -1049,16 +1149,16 @@ function bind(){
   $('btnSize').onclick = () => { S.big = !S.big; saveS(); layoutCam(); };
   $('btnDbg').onclick = () => { $('dbgBox').hidden = !$('dbgBox').hidden; if (!$('dbgBox').hidden && cal && stream){ captureRect(); drawDebug(); } };
   $('btnSettings').onclick = () => {
-    $('setDouble').checked = S.doubleOut; $('setSpeak').checked = S.speak; $('setFlip').checked = S.flip;
+    $('setSpeak').checked = S.speak; $('setFlip').checked = S.flip;
     $('setSens').value = S.sens; $('setSettle').value = S.settle; $('setShift').value = S.tipH;
     syncSetLabels(); $('setModal').hidden = false;
   };
   const syncSetLabels = () => { $('setSensV').textContent = $('setSens').value; $('setSettleV').textContent = $('setSettle').value; $('setShiftV').textContent = $('setShift').value; };
   ['setSens', 'setSettle', 'setShift'].forEach(id => $(id).addEventListener('input', syncSetLabels));
   $('setClose').onclick = () => {
-    S.doubleOut = $('setDouble').checked; S.speak = $('setSpeak').checked; S.flip = $('setFlip').checked;
+    S.speak = $('setSpeak').checked; S.flip = $('setFlip').checked;
     S.sens = +$('setSens').value; S.settle = +$('setSettle').value; S.tipH = +$('setShift').value;
-    saveS(); applySettings(); if (G && !G.over && G.turn) { evalTurn(); saveG(); } render(); $('setModal').hidden = true;
+    saveS(); applySettings(); render(); $('setModal').hidden = true;
   };
   [$('padModal'), $('setModal'), $('newModal')].forEach(m => m.addEventListener('click', e => { if (e.target === m) m.hidden = true; }));
 }
