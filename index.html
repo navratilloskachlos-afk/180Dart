@@ -85,6 +85,20 @@ button[disabled]{opacity:.45}
 .field{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:12px 0;font-size:15px}
 .field input[type=range]{flex:1;max-width:55%}
 .field small{color:var(--mut);display:block;font-size:12px}
+.players.cricket{display:block;padding:8px 6px;background:var(--card);border:1px solid var(--line);border-radius:14px}
+.crg{display:grid;gap:4px;align-items:center}
+.crh{text-align:center;padding:3px 1px;border-radius:10px;border:2px solid transparent;min-width:0}
+.crh.act{border-color:var(--acc);box-shadow:0 0 12px rgba(61,220,132,.15)}
+.crh .nm{font-size:12px;color:var(--mut);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.crh.act .nm{color:var(--txt)}
+.crh .sc{font-size:26px;font-weight:800;line-height:1.1;font-variant-numeric:tabular-nums}
+.crh .wn{font-size:10.5px;color:var(--mut)}
+.crn{text-align:center;font-weight:800;font-size:20px}
+.crn.dead{opacity:.35}
+.crc{height:38px;display:flex;align-items:center;justify-content:center;border-radius:8px;background:var(--card2);color:var(--txt);font-size:24px;font-weight:700}
+.crc.act{background:#1d3a2a}
+.crc.m3{color:var(--acc)}
+.crleg{margin-top:6px;text-align:center;font-size:12px;color:var(--mut)}
 .ngh{margin:10px 0 5px;color:var(--mut);font-size:13px}
 .win{text-align:center}
 .win .big{font-size:44px;margin:4px 0}
@@ -177,8 +191,8 @@ button[disabled]{opacity:.45}
   <div class="sheet">
     <h2>Nová hra</h2>
     <div class="ngh">Hra</div>
-    <div class="mult" style="grid-template-columns:repeat(3,1fr)">
-      <button data-k="mode" data-v="x01">X01</button><button data-k="mode" data-v="countup">Count-up</button><button data-k="mode" data-v="atc">Around the Clock</button>
+    <div class="mult" style="grid-template-columns:repeat(2,1fr)">
+      <button data-k="mode" data-v="x01">X01</button><button data-k="mode" data-v="cricket">Cricket</button><button data-k="mode" data-v="countup">Count-up</button><button data-k="mode" data-v="atc">Around the Clock</button>
     </div>
     <div id="ngX01">
       <div class="ngh">Začátek</div>
@@ -189,6 +203,11 @@ button[disabled]{opacity:.45}
     <div id="ngCU">
       <div class="ngh">Počet kol</div>
       <div class="mult"><button data-k="rounds" data-v="5">5</button><button data-k="rounds" data-v="8">8</button><button data-k="rounds" data-v="10">10</button></div>
+    </div>
+    <div id="ngCR">
+      <div class="ngh">Varianta</div>
+      <div class="mult" style="grid-template-columns:1fr 1fr"><button data-k="cricket" data-v="classic">Klasický</button><button data-k="cricket" data-v="cut">Cut-throat</button></div>
+      <div class="ngh">Čísla 20 až 15 a Bull: každé zavřete třemi značkami. Klasický: za další zásahy bodujete vy. Cut-throat: body dostávají soupeři, vyhrává nejnižší skóre.</div>
     </div>
     <div id="ngAT" class="ngh" style="margin-top:8px">Trefujte čísla 1 až 20 po řadě, nakonec Bull. Vyhrává, kdo je první.</div>
     <div class="ngh">Počet hráčů</div>
@@ -552,22 +571,23 @@ function coSearch(rem, n, dbl){
 const $ = id => document.getElementById(id);
 const LS = 'darts501.settings.v1', LSG = 'darts501.game.v2';
 
-let S = {mode:'x01', start:501, out:'double', rounds:8, sens:75, settle:5, tipH:2, flip:false, speak:false, names:['Hráč 1','Hráč 2','Hráč 3','Hráč 4','Hráč 5','Hráč 6'], count:2, cal:null, big:true};
+let S = {mode:'x01', start:501, out:'double', rounds:8, cricket:'classic', sens:75, settle:5, tipH:2, flip:false, speak:false, names:['Hráč 1','Hráč 2','Hráč 3','Hráč 4','Hráč 5','Hráč 6'], count:2, cal:null, big:true};
 try { const j = JSON.parse(localStorage.getItem(LS) || 'null'); if (j) S = Object.assign(S, j); } catch(e){}
 for (let i = 0; i < 6; i++) if (!S.names[i]) S.names[i] = 'Hráč ' + (i + 1);
 function saveS(){ try { localStorage.setItem(LS, JSON.stringify(S)); } catch(e){} }
 
 // ---------- hra ----------
 let G = null, undoStack = [];
-function mkPlayer(name){ return {name, legs:0, darts:0, last:0, rem:0, score:0, target:1}; }
-function resetPlayer(p){ p.darts = 0; p.last = 0; p.rem = G.opts.start; p.score = 0; p.target = 1; }
+const CR_NUMS = [20, 19, 18, 17, 16, 15, 25];
+function mkPlayer(name){ return {name, legs:0, darts:0, last:0, rem:0, score:0, target:1, cm:[0,0,0,0,0,0,0]}; }
+function resetPlayer(p){ p.darts = 0; p.last = 0; p.rem = G.opts.start; p.score = 0; p.target = 1; p.cm = [0,0,0,0,0,0,0]; }
 function snap(p){ return {rem:p.rem, score:p.score, target:p.target, darts:p.darts}; }
-function mkTurn(p){ return {darts:[], start:snap(p), bust:false, win:false, done:false}; }
+function mkTurn(p){ return {darts:[], start:snap(p), all:G.players.map(q => ({cm:(q.cm || []).slice(), score:q.score})), bust:false, win:false, done:false}; }
 function newGame(mode, opts, n){
   mode = mode || S.mode;
-  opts = Object.assign({start:S.start, out:S.out, rounds:S.rounds}, opts || {});
+  opts = Object.assign({start:S.start, out:S.out, rounds:S.rounds, cricket:S.cricket}, opts || {});
   n = Math.max(2, Math.min(6, n || S.count || 2));
-  Object.assign(S, {mode, start:opts.start, out:opts.out, rounds:opts.rounds, count:n}); saveS();
+  Object.assign(S, {mode, start:opts.start, out:opts.out, rounds:opts.rounds, cricket:opts.cricket, count:n}); saveS();
   G = {mode, opts, players:S.names.slice(0, n).map(mkPlayer), cur:0, starter:0, turnNo:0, over:null, turn:null};
   G.players.forEach(resetPlayer);
   G.turn = mkTurn(G.players[0]); undoStack = []; saveG();
@@ -591,6 +611,7 @@ function modeTitle(){
   const o = G.opts;
   if (G.mode === 'x01') return `${o.start} · ${o.out === 'double' ? 'double-out' : 'bez double'}`;
   if (G.mode === 'countup') return `Count-up · ${o.rounds} kol`;
+  if (G.mode === 'cricket') return `Cricket · ${o.cricket === 'cut' ? 'cut-throat' : 'klasický'}`;
   return 'Around the Clock';
 }
 function evalTurn(){
@@ -610,6 +631,23 @@ function evalTurn(){
     let sc = s.score;
     for (const d of t.darts){ n++; sc += d.score; }
     p.score = sc;
+  } else if (G.mode === 'cricket'){
+    G.players.forEach((q, i) => { q.cm = t.all[i].cm.slice(); q.score = t.all[i].score; });
+    const cut = o.cricket === 'cut';
+    for (const d of t.darts){
+      n++;
+      const ix = d.mult > 0 ? CR_NUMS.indexOf(d.num) : -1;
+      if (ix >= 0){
+        const before = p.cm[ix], extra = Math.max(0, before + d.mult - 3);
+        p.cm[ix] = Math.min(3, before + d.mult);
+        if (extra > 0){
+          const pts = extra * d.num;   // Bull = 25
+          if (cut) G.players.forEach((q, j) => { if (j !== G.cur && q.cm[ix] < 3) q.score += pts; });
+          else if (G.players.some((q, j) => j !== G.cur && q.cm[ix] < 3)) p.score += pts;
+        }
+      }
+      if (p.cm.every(m => m >= 3) && G.players.every((q, j) => j === G.cur || (cut ? p.score <= q.score : p.score >= q.score))){ win = true; break; }
+    }
   } else {
     let tg = s.target;
     for (const d of t.darts){
@@ -636,6 +674,7 @@ function turnTotal(){
   const t = G.turn, p = G.players[G.cur], s = t.start;
   if (G.mode === 'x01') return t.bust ? 0 : s.rem - p.rem;
   if (G.mode === 'countup') return p.score - s.score;
+  if (G.mode === 'cricket') return t.darts.reduce((a, d) => a + (d.mult > 0 && CR_NUMS.includes(d.num) ? d.mult : 0), 0);
   return Math.min(p.target, 21) - s.target + (p.target > 21 ? 1 : 0);
 }
 function addDart(d){
@@ -649,7 +688,7 @@ function afterDart(){
   const t = G.turn;
   if (G.over) { showWin(); speak('Konec hry'); return; }
   if (t.bust) { speak('Bust'); }
-  else if (t.done && G.mode !== 'atc') speak(String(turnTotal()));
+  else if (t.done && (G.mode === 'x01' || G.mode === 'countup')) speak(String(turnTotal()));
 }
 function nextTurn(auto){
   if (G.over) return;
@@ -676,11 +715,27 @@ function nextLeg(){
 
 // ---------- vykreslení ----------
 function esc(s){ return String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+const CR_GLYPH = ['', '/', '✕', '⊗'];
+function renderCricket(){
+  const n = G.players.length, act = G.over ? -1 : G.cur;
+  let h = `<div class="crg" style="grid-template-columns:40px repeat(${n},minmax(0,1fr))"><div></div>`;
+  G.players.forEach((p, i) => {
+    h += `<div class="crh ${i === act ? 'act' : ''}"><div class="nm" data-name="${i}">${esc(p.name)}</div><div class="sc">${p.score}</div><div class="wn">výhry ${p.legs}</div></div>`;
+  });
+  CR_NUMS.forEach((num, ix) => {
+    const dead = G.players.every(p => p.cm[ix] >= 3);
+    h += `<div class="crn ${dead ? 'dead' : ''}">${num === 25 ? 'B' : num}</div>`;
+    G.players.forEach((p, i) => { h += `<div class="crc ${i === act ? 'act' : ''} ${p.cm[ix] >= 3 ? 'm3' : ''}">${CR_GLYPH[p.cm[ix]]}</div>`; });
+  });
+  h += '</div><div class="crleg">' + (G.opts.cricket === 'cut' ? 'Cut-throat: body jdou soupeřům, vyhrává nejnižší skóre' : 'Klasický: body za zásahy na čísla, která soupeř ještě nezavřel') + '</div>';
+  $('players').innerHTML = h;
+}
 function render(){
   const t = G.turn, o = G.opts, n = G.players.length;
   $('title').textContent = '🎯 ' + modeTitle();
-  $('players').className = 'players n' + n;
-  $('players').innerHTML = G.players.map((p, i) => {
+  $('players').className = 'players n' + n + (G.mode === 'cricket' ? ' cricket' : '');
+  if (G.mode === 'cricket') renderCricket();
+  else $('players').innerHTML = G.players.map((p, i) => {
     const act = i === G.cur && !G.over;
     let big, meta, co = '';
     if (G.mode === 'x01'){
@@ -706,7 +761,7 @@ function render(){
   const p = G.players[G.cur];
   const round = Math.min(Math.floor(G.turnNo / n) + 1, o.rounds || 99);
   $('turnWho').innerHTML = `<b>${esc(p.name)}</b> · šipka ${Math.min(t.darts.length + 1, 3)}/3` + (G.mode === 'countup' ? ` · kolo ${round}/${o.rounds}` : '');
-  $('turnTotal').innerHTML = (G.mode === 'atc' ? 'postup: <b>+' : 'kolo: <b>') + turnTotal() + '</b>';
+  $('turnTotal').innerHTML = (G.mode === 'atc' ? 'postup: <b>+' : G.mode === 'cricket' ? 'značky: <b>' : 'kolo: <b>') + turnTotal() + '</b>';
   let chips = '';
   for (let i = 0; i < 3; i++){
     const d = t.darts[i];
@@ -745,6 +800,10 @@ function showWin(){
     $('winTitle').textContent = w.length > 1 ? `Remíza: ${names}` : `${names} vyhrál!`;
     $('winText').textContent = `${f.score} bodů · Ø ${(f.darts ? f.score / f.darts * 3 : 0).toFixed(1)} · výhry ${wins}`;
     $('winNext').textContent = 'Hrát znovu';
+  } else if (G.mode === 'cricket'){
+    $('winTitle').textContent = `${names} vyhrál!`;
+    $('winText').textContent = `Skóre ${f.score} · šipek ${f.darts} · výhry ${wins}`;
+    $('winNext').textContent = 'Další hra';
   } else if (G.mode === 'atc'){
     $('winTitle').textContent = `${names} vyhrál!`;
     $('winText').textContent = `Šipek: ${f.darts} · výhry ${wins}`;
@@ -763,7 +822,7 @@ function renderNG(){
     const v = /^\d+$/.test(b.dataset.v) ? +b.dataset.v : b.dataset.v;
     b.classList.toggle('on', NG[b.dataset.k] === v);
   });
-  $('ngX01').hidden = NG.mode !== 'x01'; $('ngCU').hidden = NG.mode !== 'countup'; $('ngAT').hidden = NG.mode !== 'atc';
+  $('ngX01').hidden = NG.mode !== 'x01'; $('ngCU').hidden = NG.mode !== 'countup'; $('ngAT').hidden = NG.mode !== 'atc'; $('ngCR').hidden = NG.mode !== 'cricket';
 }
 
 // ---------- ruční zadání ----------
@@ -1128,7 +1187,7 @@ function bind(){
   $('btnUndo').onclick = undo;
   $('btnNext').onclick = () => nextTurn(false);
   $('btnNew').onclick = () => {
-    NG = {mode:G.mode, start:G.opts.start, out:G.opts.out, rounds:G.opts.rounds || 8, n:G.players.length};
+    NG = {mode:G.mode, start:G.opts.start || 501, out:G.opts.out || 'double', rounds:G.opts.rounds || 8, cricket:G.opts.cricket || 'classic', n:G.players.length};
     renderNG(); $('newModal').hidden = false;
   };
   $('newModal').addEventListener('click', e => {
@@ -1136,7 +1195,7 @@ function bind(){
     const v = b.dataset.v; NG[b.dataset.k] = /^\d+$/.test(v) ? +v : v; renderNG();
   });
   $('ngGo').onclick = () => {
-    newGame(NG.mode, {start:NG.start, out:NG.out, rounds:NG.rounds}, NG.n);
+    newGame(NG.mode, {start:NG.start, out:NG.out, rounds:NG.rounds, cricket:NG.cricket}, NG.n);
     render(); $('newModal').hidden = true;
   };
   $('newCancel').onclick = () => { $('newModal').hidden = true; };
