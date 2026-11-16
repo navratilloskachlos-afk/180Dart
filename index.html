@@ -99,6 +99,18 @@ button[disabled]{opacity:.45}
 .crc.act{background:#1d3a2a}
 .crc.m3{color:var(--acc)}
 .crleg{margin-top:6px;text-align:center;font-size:12px;color:var(--mut)}
+.hbtns{display:flex;gap:6px}
+.hbtns button{min-width:44px;padding:8px 10px;font-weight:700}
+.helphead{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:6px}
+.helphead h2{margin:0}
+.helptoc{display:flex;flex-wrap:wrap;gap:6px;margin:4px 0 10px}
+.helptoc button{min-height:34px;padding:5px 10px;font-size:13px;border-radius:16px}
+#helpBody h3{margin:16px 0 4px;font-size:16px;color:var(--acc);scroll-margin-top:4px}
+#helpBody h4{margin:10px 0 2px;font-size:14px}
+#helpBody p,#helpBody li{font-size:14px;color:var(--txt);margin:4px 0}
+#helpBody ul,#helpBody ol{margin:4px 0;padding-left:20px}
+#helpBody code{background:var(--card2);padding:1px 5px;border-radius:5px;font-size:13px}
+#helpBody .tip{color:var(--mut);font-size:13px}
 .ngh{margin:10px 0 5px;color:var(--mut);font-size:13px}
 .win{text-align:center}
 .win .big{font-size:44px;margin:4px 0}
@@ -109,7 +121,7 @@ button[disabled]{opacity:.45}
 <div id="app">
   <header class="top">
     <h1 id="title">🎯 Šipky 501</h1>
-    <button id="btnSettings" class="ghost" aria-label="Nastavení">⚙ Nastavení</button>
+    <div class="hbtns"><button id="btnHelp" class="ghost" aria-label="Nápověda">?</button><button id="btnLang" class="ghost" aria-label="Language">EN</button><button id="btnSettings" class="ghost" aria-label="Nastavení">⚙</button></div>
   </header>
 
   <section id="players" class="players"></section>
@@ -127,7 +139,7 @@ button[disabled]{opacity:.45}
         <video id="vid" playsinline muted autoplay></video>
         <canvas id="ov"></canvas>
         <canvas id="loupe" width="140" height="140" hidden></canvas>
-        <div id="camPh">Kamera je vypnutá.<br>Klepněte na „Spustit kameru“. Skóre můžete do té doby zadávat ručně.</div>
+        <div id="camPh" data-en="Camera is off.<br>Tap “Start camera”. Until then you can enter scores manually.">Kamera je vypnutá.<br>Klepněte na „Spustit kameru“. Skóre můžete do té doby zadávat ručně.</div>
       </div>
     </div>
     <div id="calHelp" class="calhelp" hidden>
@@ -136,13 +148,13 @@ button[disabled]{opacity:.45}
     </div>
     <div class="row">
       <button id="btnCam" class="primary">📷 Spustit kameru</button>
-      <button id="btnCal">🎯 Kalibrace</button>
-      <button id="btnBase">✔ Terč je prázdný</button>
+      <button id="btnCal" data-en="🎯 Calibrate">🎯 Kalibrace</button>
+      <button id="btnBase" data-en="✔ Board is empty">✔ Terč je prázdný</button>
     </div>
     <div class="row small">
-      <button id="btnSwitch" class="ghost">🔄 Přepnout kameru</button>
-      <button id="btnSize" class="ghost">⤢ Velikost náhledu</button>
-      <button id="btnDbg" class="ghost">🔍 Ladění</button>
+      <button id="btnSwitch" class="ghost" data-en="🔄 Switch camera">🔄 Přepnout kameru</button>
+      <button id="btnSize" class="ghost" data-en="⤢ Preview size">⤢ Velikost náhledu</button>
+      <button id="btnDbg" class="ghost" data-en="🔍 Debug">🔍 Ladění</button>
     </div>
     <div id="dbgBox" hidden>
       <canvas id="dbg" width="480" height="480"></canvas>
@@ -151,9 +163,9 @@ button[disabled]{opacity:.45}
   </section>
 
   <section class="actions">
-    <button id="btnUndo">↶ Zpět</button>
+    <button id="btnUndo" data-en="↶ Undo">↶ Zpět</button>
     <button id="btnNext" class="primary">Další hráč ▶</button>
-    <button id="btnNew">Nová hra</button>
+    <button id="btnNew" data-en="New game">Nová hra</button>
   </section>
 </div>
 
@@ -169,53 +181,62 @@ button[disabled]{opacity:.45}
     <div class="pad2">
       <button data-n="25">25</button>
       <button data-n="50">Bull</button>
-      <button data-n="0">Mimo (0)</button>
+      <button data-n="0" data-en="Miss (0)">Mimo (0)</button>
     </div>
-    <div class="row"><button id="padCancel" class="ghost">Zavřít</button><button id="padDelete" class="danger">Smazat šipku</button></div>
+    <div class="row"><button id="padCancel" class="ghost" data-en="Close">Zavřít</button><button id="padDelete" class="danger" data-en="Delete dart">Smazat šipku</button></div>
   </div>
 </div>
 
 <div id="setModal" class="modal" hidden>
   <div class="sheet">
-    <h2>Nastavení</h2>
-    <div class="field"><span>Hlasový výstup<small>Přečte skóre kola (čeština)</small></span><input type="checkbox" id="setSpeak"></div>
-    <div class="field"><span>Citlivost kamery<small>Nižší číslo = citlivější</small></span><input type="range" id="setSens" min="30" max="160" step="5"><b id="setSensV"></b></div>
-    <div class="field"><span>Doba ustálení<small>Kolik snímků bez pohybu před vyhodnocením</small></span><input type="range" id="setSettle" min="3" max="12" step="1"><b id="setSettleV"></b></div>
-    <div class="field"><span>Výška špičky (mm)<small>Doladění: zvyšte, pokud body vycházejí systematicky dál od kamery než skutečný zásah</small></span><input type="range" id="setShift" min="0" max="20" step="1"><b id="setShiftV"></b></div>
-    <div class="field"><span>Obrátit směr špičky<small>Zapněte, pokud detekce bere za špičku peří</small></span><input type="checkbox" id="setFlip"></div>
-    <div class="row"><button id="setClose" class="primary">Hotovo</button></div>
+    <h2 data-en="Settings">Nastavení</h2>
+    <div class="field"><span data-en="Voice output<small>Reads the round score aloud (English)</small>">Hlasový výstup<small>Přečte skóre kola (čeština)</small></span><input type="checkbox" id="setSpeak"></div>
+    <div class="field"><span data-en="Camera sensitivity<small>Lower number = more sensitive</small>">Citlivost kamery<small>Nižší číslo = citlivější</small></span><input type="range" id="setSens" min="30" max="160" step="5"><b id="setSensV"></b></div>
+    <div class="field"><span data-en="Settle time<small>Frames without motion before a dart is scored</small>">Doba ustálení<small>Kolik snímků bez pohybu před vyhodnocením</small></span><input type="range" id="setSettle" min="3" max="12" step="1"><b id="setSettleV"></b></div>
+    <div class="field"><span data-en="Tip height (mm)<small>Fine-tuning: raise it if hits come out systematically farther from the camera than the real hit</small>">Výška špičky (mm)<small>Doladění: zvyšte, pokud body vycházejí systematicky dál od kamery než skutečný zásah</small></span><input type="range" id="setShift" min="0" max="20" step="1"><b id="setShiftV"></b></div>
+    <div class="field"><span data-en="Reverse tip direction<small>Turn on if the detection takes the flight for the tip</small>">Obrátit směr špičky<small>Zapněte, pokud detekce bere za špičku peří</small></span><input type="checkbox" id="setFlip"></div>
+    <div class="row"><button id="setClose" class="primary" data-en="Done">Hotovo</button></div>
   </div>
 </div>
 
 <div id="newModal" class="modal" hidden>
   <div class="sheet">
-    <h2>Nová hra</h2>
-    <div class="ngh">Hra</div>
+    <h2 data-en="New game">Nová hra</h2>
+    <div class="ngh" data-en="Game">Hra</div>
     <div class="mult" style="grid-template-columns:repeat(2,1fr)">
       <button data-k="mode" data-v="x01">X01</button><button data-k="mode" data-v="cricket">Cricket</button><button data-k="mode" data-v="countup">Count-up</button><button data-k="mode" data-v="atc">Around the Clock</button>
     </div>
     <div id="ngX01">
-      <div class="ngh">Začátek</div>
+      <div class="ngh" data-en="Start score">Začátek</div>
       <div class="mult"><button data-k="start" data-v="301">301</button><button data-k="start" data-v="501">501</button><button data-k="start" data-v="701">701</button></div>
-      <div class="ngh">Ukončení</div>
-      <div class="mult" style="grid-template-columns:1fr 1fr"><button data-k="out" data-v="double">Double-out</button><button data-k="out" data-v="straight">Bez double</button></div>
+      <div class="ngh" data-en="Finish">Ukončení</div>
+      <div class="mult" style="grid-template-columns:1fr 1fr"><button data-k="out" data-v="double">Double-out</button><button data-k="out" data-v="straight" data-en="Straight-out">Bez double</button></div>
     </div>
     <div id="ngCU">
-      <div class="ngh">Počet kol</div>
+      <div class="ngh" data-en="Rounds">Počet kol</div>
       <div class="mult"><button data-k="rounds" data-v="5">5</button><button data-k="rounds" data-v="8">8</button><button data-k="rounds" data-v="10">10</button></div>
     </div>
     <div id="ngCR">
-      <div class="ngh">Varianta</div>
-      <div class="mult" style="grid-template-columns:1fr 1fr"><button data-k="cricket" data-v="classic">Klasický</button><button data-k="cricket" data-v="cut">Cut-throat</button></div>
-      <div class="ngh">Čísla 20 až 15 a Bull: každé zavřete třemi značkami. Klasický: za další zásahy bodujete vy. Cut-throat: body dostávají soupeři, vyhrává nejnižší skóre.</div>
+      <div class="ngh" data-en="Variant">Varianta</div>
+      <div class="mult" style="grid-template-columns:1fr 1fr"><button data-k="cricket" data-v="classic" data-en="Classic">Klasický</button><button data-k="cricket" data-v="cut">Cut-throat</button></div>
+      <div class="ngh" data-en="Numbers 20 to 15 and Bull: close each with three marks. Classic: further hits score for you. Cut-throat: points go to your opponents, lowest score wins.">Čísla 20 až 15 a Bull: každé zavřete třemi značkami. Klasický: za další zásahy bodujete vy. Cut-throat: body dostávají soupeři, vyhrává nejnižší skóre.</div>
     </div>
-    <div id="ngAT" class="ngh" style="margin-top:8px">Trefujte čísla 1 až 20 po řadě, nakonec Bull. Vyhrává, kdo je první.</div>
-    <div class="ngh">Počet hráčů</div>
+    <div id="ngAT" class="ngh" style="margin-top:8px" data-en="Hit the numbers 1 to 20 in order, then Bull. First to finish wins.">Trefujte čísla 1 až 20 po řadě, nakonec Bull. Vyhrává, kdo je první.</div>
+    <div class="ngh" data-en="Players">Počet hráčů</div>
     <div class="mult" style="grid-template-columns:repeat(5,1fr)">
       <button data-k="n" data-v="2">2</button><button data-k="n" data-v="3">3</button><button data-k="n" data-v="4">4</button><button data-k="n" data-v="5">5</button><button data-k="n" data-v="6">6</button>
     </div>
-    <p style="margin:10px 0 0;color:var(--mut);font-size:13px">Aktuální hra se smaže. Jména hráčů změníte klepnutím na jméno.</p>
-    <div class="row"><button id="newCancel" class="ghost">Zrušit</button><button id="ngGo" class="primary">Začít hru</button></div>
+    <p style="margin:10px 0 0;color:var(--mut);font-size:13px" data-en="The current game will be erased. Tap a name to rename a player.">Aktuální hra se smaže. Jména hráčů změníte klepnutím na jméno.</p>
+    <div class="row"><button id="newCancel" class="ghost" data-en="Cancel">Zrušit</button><button id="ngGo" class="primary" data-en="Start game">Začít hru</button></div>
+  </div>
+</div>
+
+<div id="helpModal" class="modal" hidden>
+  <div class="sheet">
+    <div class="helphead"><h2 id="helpTitle"></h2><button id="helpLang" class="ghost"></button></div>
+    <div id="helpToc" class="helptoc"></div>
+    <div id="helpBody"></div>
+    <div class="row"><button id="helpClose" class="primary"></button></div>
   </div>
 </div>
 
@@ -224,7 +245,7 @@ button[disabled]{opacity:.45}
     <div class="big">🏆</div>
     <h2 id="winTitle"></h2>
     <p id="winText"></p>
-    <div class="row"><button id="winUndo" class="ghost">↶ Vrátit poslední šipku</button><button id="winNext" class="primary">Další leg</button></div>
+    <div class="row"><button id="winUndo" class="ghost" data-en="↶ Undo last dart">↶ Vrátit poslední šipku</button><button id="winNext" class="primary">Další leg</button></div>
   </div>
 </div>
 
@@ -570,6 +591,8 @@ function coSearch(rem, n, dbl){
 // ============================== APLIKACE ================================
 const $ = id => document.getElementById(id);
 const LS = 'darts501.settings.v1', LSG = 'darts501.game.v2';
+let LANG = 'cs';   // aplikace vždy startuje česky; přepnutí platí do dalšího spuštění
+const L = (cs, en) => LANG === 'en' ? en : cs;
 
 let S = {mode:'x01', start:501, out:'double', rounds:8, cricket:'classic', sens:75, settle:5, tipH:2, flip:false, speak:false, names:['Hráč 1','Hráč 2','Hráč 3','Hráč 4','Hráč 5','Hráč 6'], count:2, cal:null, big:true};
 try { const j = JSON.parse(localStorage.getItem(LS) || 'null'); if (j) S = Object.assign(S, j); } catch(e){}
@@ -602,16 +625,16 @@ function loadG(){
 }
 function pushUndo(){ undoStack.push(JSON.stringify(G)); if (undoStack.length > 60) undoStack.shift(); }
 function undo(){
-  if (!undoStack.length) return toast('Není co vracet', true);
+  if (!undoStack.length) return toast(L('Není co vracet','Nothing to undo'), true);
   G = JSON.parse(undoStack.pop()); saveG(); render();
 }
 function atcHit(d, tg){ return tg <= 20 ? (d.num === tg && d.mult > 0) : d.num === 25; }
 function atcLabel(tg){ return tg <= 20 ? String(tg) : tg === 21 ? 'Bull' : '✓'; }
 function modeTitle(){
   const o = G.opts;
-  if (G.mode === 'x01') return `${o.start} · ${o.out === 'double' ? 'double-out' : 'bez double'}`;
-  if (G.mode === 'countup') return `Count-up · ${o.rounds} kol`;
-  if (G.mode === 'cricket') return `Cricket · ${o.cricket === 'cut' ? 'cut-throat' : 'klasický'}`;
+  if (G.mode === 'x01') return `${o.start} · ${o.out === 'double' ? 'double-out' : L('bez double','straight-out')}`;
+  if (G.mode === 'countup') return `Count-up · ${o.rounds} ${L('kol','rounds')}`;
+  if (G.mode === 'cricket') return `Cricket · ${o.cricket === 'cut' ? 'cut-throat' : L('klasický','classic')}`;
   return 'Around the Clock';
 }
 function evalTurn(){
@@ -686,7 +709,7 @@ function addDart(d){
 }
 function afterDart(){
   const t = G.turn;
-  if (G.over) { showWin(); speak('Konec hry'); return; }
+  if (G.over) { showWin(); speak(L('Konec hry','Game over')); return; }
   if (t.bust) { speak('Bust'); }
   else if (t.done && (G.mode === 'x01' || G.mode === 'countup')) speak(String(turnTotal()));
 }
@@ -720,14 +743,14 @@ function renderCricket(){
   const n = G.players.length, act = G.over ? -1 : G.cur;
   let h = `<div class="crg" style="grid-template-columns:40px repeat(${n},minmax(0,1fr))"><div></div>`;
   G.players.forEach((p, i) => {
-    h += `<div class="crh ${i === act ? 'act' : ''}"><div class="nm" data-name="${i}">${esc(p.name)}</div><div class="sc">${p.score}</div><div class="wn">výhry ${p.legs}</div></div>`;
+    h += `<div class="crh ${i === act ? 'act' : ''}"><div class="nm" data-name="${i}">${esc(p.name)}</div><div class="sc">${p.score}</div><div class="wn">${L('výhry','wins')} ${p.legs}</div></div>`;
   });
   CR_NUMS.forEach((num, ix) => {
     const dead = G.players.every(p => p.cm[ix] >= 3);
     h += `<div class="crn ${dead ? 'dead' : ''}">${num === 25 ? 'B' : num}</div>`;
     G.players.forEach((p, i) => { h += `<div class="crc ${i === act ? 'act' : ''} ${p.cm[ix] >= 3 ? 'm3' : ''}">${CR_GLYPH[p.cm[ix]]}</div>`; });
   });
-  h += '</div><div class="crleg">' + (G.opts.cricket === 'cut' ? 'Cut-throat: body jdou soupeřům, vyhrává nejnižší skóre' : 'Klasický: body za zásahy na čísla, která soupeř ještě nezavřel') + '</div>';
+  h += '</div><div class="crleg">' + (G.opts.cricket === 'cut' ? L('Cut-throat: body jdou soupeřům, vyhrává nejnižší skóre','Cut-throat: points go to opponents, lowest score wins') : L('Klasický: body za zásahy na čísla, která soupeř ještě nezavřel','Classic: you score on numbers an opponent has not closed yet')) + '</div>';
   $('players').innerHTML = h;
 }
 function render(){
@@ -742,16 +765,16 @@ function render(){
       const avg = p.darts ? ((o.start - p.rem) / p.darts * 3) : 0;
       const k = act ? Math.max(0, 3 - t.darts.length) : 3;
       const c = findCheckout(p.rem, k, o.out === 'double');
-      big = p.rem; meta = `Ø ${avg.toFixed(1)} · poslední ${p.last}`; co = c ? c.join(' · ') : '';
+      big = p.rem; meta = `Ø ${avg.toFixed(1)} · ${L('poslední','last')} ${p.last}`; co = c ? c.join(' · ') : '';
     } else if (G.mode === 'countup'){
       const avg = p.darts ? (p.score / p.darts * 3) : 0;
-      big = p.score; meta = `Ø ${avg.toFixed(1)} · poslední ${p.last}`;
+      big = p.score; meta = `Ø ${avg.toFixed(1)} · ${L('poslední','last')} ${p.last}`;
     } else {
-      big = atcLabel(p.target); meta = `šipek ${p.darts} · poslední +${p.last}`;
-      co = p.target <= 21 ? `zbývá ${22 - p.target}` : 'hotovo';
+      big = atcLabel(p.target); meta = `${L('šipek','darts')} ${p.darts} · ${L('poslední','last')} +${p.last}`;
+      co = p.target <= 21 ? `${L('zbývá','left')} ${22 - p.target}` : L('hotovo','done');
     }
     return `<div class="pl ${act ? 'active' : ''}">
-      <div class="legs">výhry ${p.legs}</div>
+      <div class="legs">${L('výhry','wins')} ${p.legs}</div>
       <div class="pname" data-name="${i}">${esc(p.name)}</div>
       <div class="rem">${big}</div>
       <div class="meta">${meta}</div>
@@ -760,21 +783,21 @@ function render(){
   }).join('');
   const p = G.players[G.cur];
   const round = Math.min(Math.floor(G.turnNo / n) + 1, o.rounds || 99);
-  $('turnWho').innerHTML = `<b>${esc(p.name)}</b> · šipka ${Math.min(t.darts.length + 1, 3)}/3` + (G.mode === 'countup' ? ` · kolo ${round}/${o.rounds}` : '');
-  $('turnTotal').innerHTML = (G.mode === 'atc' ? 'postup: <b>+' : G.mode === 'cricket' ? 'značky: <b>' : 'kolo: <b>') + turnTotal() + '</b>';
+  $('turnWho').innerHTML = `<b>${esc(p.name)}</b> · ${L('šipka','dart')} ${Math.min(t.darts.length + 1, 3)}/3` + (G.mode === 'countup' ? ` · ${L('kolo','round')} ${round}/${o.rounds}` : '');
+  $('turnTotal').innerHTML = (G.mode === 'atc' ? L('postup','progress') + ': <b>+' : G.mode === 'cricket' ? L('značky','marks') + ': <b>' : L('kolo','round') + ': <b>') + turnTotal() + '</b>';
   let chips = '';
   for (let i = 0; i < 3; i++){
     const d = t.darts[i];
     if (d) chips += `<button class="chip ${d.src === 'cam' ? 'cam' : 'man'}" data-edit="${i}"><b>${d.label}</b><small>${d.score}</small></button>`;
-    else if (!t.done && i === t.darts.length) chips += `<button class="chip add" data-add="1">＋ ručně</button>`;
+    else if (!t.done && i === t.darts.length) chips += `<button class="chip add" data-add="1">${L('＋ ručně','＋ manual')}</button>`;
     else chips += `<div class="chip empty">–</div>`;
   }
   $('chips').innerHTML = chips;
   const b = $('banner');
-  if (t.bust){ b.hidden = false; b.className = 'banner bust'; b.textContent = `BUST – skóre se vrací na ${t.start.rem}. Vyndejte šipky.`; }
-  else if (t.done && !G.over){ b.hidden = false; b.className = 'banner info'; b.textContent = 'Vyndejte šipky – po vyjmutí se přepne hráč.'; }
+  if (t.bust){ b.hidden = false; b.className = 'banner bust'; b.textContent = L(`BUST – skóre se vrací na ${t.start.rem}. Vyndejte šipky.`, `BUST – score returns to ${t.start.rem}. Remove the darts.`); }
+  else if (t.done && !G.over){ b.hidden = false; b.className = 'banner info'; b.textContent = L('Vyndejte šipky – po vyjmutí se přepne hráč.','Remove the darts – the next player starts automatically.'); }
   else b.hidden = true;
-  $('btnNext').textContent = (t.done ? 'Další hráč ▶' : 'Přeskočit ▶');
+  $('btnNext').textContent = (t.done ? L('Další hráč ▶','Next player ▶') : L('Přeskočit ▶','Skip ▶'));
   updateStatus();
 }
 let toastT = 0;
@@ -787,31 +810,31 @@ function toast(msg, warn){
 function speak(text){
   if (!S.speak || !('speechSynthesis' in window)) return;
   try {
-    const u = new SpeechSynthesisUtterance(text); u.lang = 'cs-CZ'; u.rate = 1.0;
+    const u = new SpeechSynthesisUtterance(text); u.lang = LANG === 'en' ? 'en-US' : 'cs-CZ'; u.rate = 1.0;
     speechSynthesis.cancel(); speechSynthesis.speak(u);
   } catch(e){}
 }
 function showWin(){
   const w = G.over.winners.map(i => G.players[i]);
-  const names = w.map(p => p.name).join(' a ');
+  const names = w.map(p => p.name).join(L(' a ',' & '));
   const wins = G.players.map(p => p.legs).join(':');
   const f = w[0];
   if (G.mode === 'countup'){
-    $('winTitle').textContent = w.length > 1 ? `Remíza: ${names}` : `${names} vyhrál!`;
-    $('winText').textContent = `${f.score} bodů · Ø ${(f.darts ? f.score / f.darts * 3 : 0).toFixed(1)} · výhry ${wins}`;
-    $('winNext').textContent = 'Hrát znovu';
+    $('winTitle').textContent = w.length > 1 ? `${L('Remíza','Draw')}: ${names}` : L(`${names} vyhrál!`, `${names} wins!`);
+    $('winText').textContent = `${f.score} ${L('bodů','points')} · Ø ${(f.darts ? f.score / f.darts * 3 : 0).toFixed(1)} · ${L('výhry','wins')} ${wins}`;
+    $('winNext').textContent = L('Hrát znovu','Play again');
   } else if (G.mode === 'cricket'){
-    $('winTitle').textContent = `${names} vyhrál!`;
-    $('winText').textContent = `Skóre ${f.score} · šipek ${f.darts} · výhry ${wins}`;
-    $('winNext').textContent = 'Další hra';
+    $('winTitle').textContent = L(`${names} vyhrál!`, `${names} wins!`);
+    $('winText').textContent = `${L('Skóre','Score')} ${f.score} · ${L('šipek','darts')} ${f.darts} · ${L('výhry','wins')} ${wins}`;
+    $('winNext').textContent = L('Další hra','Next game');
   } else if (G.mode === 'atc'){
-    $('winTitle').textContent = `${names} vyhrál!`;
-    $('winText').textContent = `Šipek: ${f.darts} · výhry ${wins}`;
-    $('winNext').textContent = 'Další hra';
+    $('winTitle').textContent = L(`${names} vyhrál!`, `${names} wins!`);
+    $('winText').textContent = `${L('Šipek','Darts')}: ${f.darts} · ${L('výhry','wins')} ${wins}`;
+    $('winNext').textContent = L('Další hra','Next game');
   } else {
-    $('winTitle').textContent = `${names} vyhrál leg!`;
-    $('winText').textContent = `Šipek v legu: ${f.darts} · průměr ${(G.opts.start / f.darts * 3).toFixed(1)} · legy ${wins}`;
-    $('winNext').textContent = 'Další leg';
+    $('winTitle').textContent = L(`${names} vyhrál leg!`, `${names} wins the leg!`);
+    $('winText').textContent = `${L('Šipek v legu','Darts in leg')}: ${f.darts} · ${L('průměr','average')} ${(G.opts.start / f.darts * 3).toFixed(1)} · legs ${wins}`.replace('legs', L('legy','legs'));
+    $('winNext').textContent = L('Další leg','Next leg');
   }
   $('winModal').hidden = false;
 }
@@ -834,7 +857,7 @@ function buildPad(){
 }
 function openPad(mode, idx){
   pad = {mode, idx, mult:1};
-  $('padTitle').textContent = mode === 'add' ? `Zadat šipku č. ${G.turn.darts.length + 1}` : `Opravit šipku č. ${idx + 1}`;
+  $('padTitle').textContent = mode === 'add' ? L(`Zadat šipku č. ${G.turn.darts.length + 1}`, `Enter dart #${G.turn.darts.length + 1}`) : L(`Opravit šipku č. ${idx + 1}`, `Edit dart #${idx + 1}`);
   $('padDelete').style.display = mode === 'edit' ? '' : 'none';
   setMult(1); $('padModal').hidden = false;
 }
@@ -898,25 +921,25 @@ function layoutCam(){
 async function lockScreen(){ try { if ('wakeLock' in navigator) wl = await navigator.wakeLock.request('screen'); } catch(e){} }
 async function startCamera(){
   if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){
-    toast('Prohlížeč nepodporuje kameru (je potřeba HTTPS)', true); return;
+    toast(L('Prohlížeč nepodporuje kameru (je potřeba HTTPS)','This browser does not support the camera (HTTPS is required)'), true); return;
   }
   stopCamera();
   try {
     stream = await navigator.mediaDevices.getUserMedia({audio:false, video:{facingMode:{ideal:facing}, width:{ideal:1920}, height:{ideal:1080}, frameRate:{ideal:30}}});
   } catch(e){
-    toast('Kameru se nepodařilo spustit: ' + (e && e.name || e), true); stream = null; updateStatus(); return;
+    toast(L('Kameru se nepodařilo spustit: ','Could not start the camera: ') + (e && e.name || e), true); stream = null; updateStatus(); return;
   }
   vid.srcObject = stream;
   try { await vid.play(); } catch(e){}
   $('camPh').hidden = true;
-  $('btnCam').textContent = '⏹ Vypnout kameru';
+  $('btnCam').textContent = L('⏹ Vypnout kameru','⏹ Stop camera');
   lockScreen();
   if (vid.videoWidth) updateSize();
   updateStatus();
 }
 function stopCamera(){
   if (stream){ stream.getTracks().forEach(t => t.stop()); stream = null; }
-  vid.srcObject = null; $('camPh').hidden = false; $('btnCam').textContent = '📷 Spustit kameru';
+  vid.srcObject = null; $('camPh').hidden = false; $('btnCam').textContent = L('📷 Spustit kameru','📷 Start camera');
   det.clearBaseline(); updateStatus(); drawOverlay();
   try { if (wl) wl.release(); } catch(e){} wl = null;
 }
@@ -938,13 +961,14 @@ function computeCal(){
   det.clearBaseline();
 }
 const CAL_TEXT = [
-  'Bod 1/4: vnější okraj dvojitého (nejvzdálenějšího) pole na drátu mezi čísly 20 a 1.',
-  'Bod 2/4: vnější okraj dvojitého pole na drátu mezi čísly 6 a 13.',
-  'Bod 3/4: vnější okraj dvojitého pole na drátu mezi čísly 3 a 19.',
-  'Bod 4/4: vnější okraj dvojitého pole na drátu mezi čísly 11 a 8.'
+  ['Bod 1/4: vnější okraj dvojitého (nejvzdálenějšího) pole na drátu mezi čísly 20 a 1.', 'Point 1/4: outer edge of the double ring (the outermost ring) on the wire between 20 and 1.'],
+  ['Bod 2/4: vnější okraj dvojitého pole na drátu mezi čísly 6 a 13.', 'Point 2/4: outer edge of the double ring on the wire between 6 and 13.'],
+  ['Bod 3/4: vnější okraj dvojitého pole na drátu mezi čísly 3 a 19.', 'Point 3/4: outer edge of the double ring on the wire between 3 and 19.'],
+  ['Bod 4/4: vnější okraj dvojitého pole na drátu mezi čísly 11 a 8.', 'Point 4/4: outer edge of the double ring on the wire between 11 and 8.']
 ];
+const calT = i => L(CAL_TEXT[i][0], CAL_TEXT[i][1]);
 function startCalibration(){
-  if (!stream){ toast('Nejdřív spusťte kameru', true); return; }
+  if (!stream){ toast(L('Nejdřív spusťte kameru','Start the camera first'), true); return; }
   calPts = []; cal = null; temp = null; calMode = 'place'; det.clearBaseline();
   S.big = true; layoutCam(); updateCalHelp(); updateStatus(); drawOverlay();
   $('camWrap').scrollIntoView({block:'nearest'});
@@ -955,9 +979,9 @@ function updateCalHelp(){
   box.hidden = false; ov.style.touchAction = 'none';
   const txt = $('calText');
   if (calMode === 'place'){
-    txt.innerHTML = `<b>${CAL_TEXT[Math.min(calPts.length, 3)]}</b><br>Stiskněte a držte prst, v lupě doladíte polohu, pustením bod potvrdíte. Určujte podle čísel na terči (20 nahoře), ne podle okraje obrazovky.`;
+    txt.innerHTML = `<b>${calT(Math.min(calPts.length, 3))}</b><br>` + L('Stiskněte a držte prst, v lupě doladíte polohu, pustením bod potvrdíte. Určujte podle čísel na terči (20 nahoře), ne podle okraje obrazovky.','Press and hold, fine-tune the position in the magnifier, release to confirm. Go by the numbers on the board (20 at the top), not by the screen edge.');
   } else {
-    txt.innerHTML = '<b>Zkontrolujte zelený překryv.</b> Kruhy a čáry musí ležet přesně na drátech terče, čísla musí sedět. Body můžete přetáhnout. Pak vyjměte šipky a klepněte na „Terč je prázdný“.';
+    txt.innerHTML = L('<b>Zkontrolujte zelený překryv.</b> Kruhy a čáry musí ležet přesně na drátech terče, čísla musí sedět. Body můžete přetáhnout. Pak vyjměte šipky a klepněte na „Terč je prázdný“.','<b>Check the green overlay.</b> Circles and lines must lie exactly on the board wires and the numbers must match. You can drag the points. Then remove the darts and tap “Board is empty”.');
   }
   drawGuide();
 }
@@ -1092,12 +1116,12 @@ function captureRect(){
   return true;
 }
 function setBaseline(){
-  if (!stream) return toast('Nejdřív spusťte kameru', true);
-  if (!cal) return toast('Nejdřív proveďte kalibraci', true);
+  if (!stream) return toast(L('Nejdřív spusťte kameru','Start the camera first'), true);
+  if (!cal) return toast(L('Nejdřív proveďte kalibraci','Calibrate first'), true);
   if (calMode !== 'none'){ calMode = 'none'; updateCalHelp(); layoutCam(); }
-  if (!captureRect()) return toast('Obraz z kamery ještě není připraven', true);
+  if (!captureRect()) return toast(L('Obraz z kamery ještě není připraven','The camera image is not ready yet'), true);
   det.setBaseline(cur); applySettings();
-  toast('Základ nastaven – můžete házet'); updateStatus(); drawOverlay();
+  toast(L('Základ nastaven – můžete házet','Baseline set – you can throw')); updateStatus(); drawOverlay();
 }
 
 // ---------- hlavní smyčka ----------
@@ -1124,7 +1148,7 @@ function onDart(d){
   const sc = scorePoint(d.x, d.y);
   lastTip = {x:d.x, y:d.y}; lastTipT = Date.now(); drawOverlay();
   if (G.over) return;
-  if (G.turn.done){ toast('Šipka navíc (kolo už je hotové) – ignoruji', true); return; }
+  if (G.turn.done){ toast(L('Šipka navíc (kolo už je hotové) – ignoruji','Extra dart (the round is already done) – ignored'), true); return; }
   if (G.turn.darts.some(o => o.pos && Math.hypot(o.pos.x - d.x, o.pos.y - d.y) < 6)) return;
   const dart = Object.assign({}, sc, {pos:{x:Math.round(d.x * 10) / 10, y:Math.round(d.y * 10) / 10}, src:'cam'});
   if (addDart(dart)){
@@ -1134,15 +1158,15 @@ function onDart(d){
 }
 function updateStatus(){
   let c = 'bad', t;
-  if (!stream) { c = ''; t = 'Kamera vypnutá – skóre lze zadávat ručně'; }
-  else if (calMode === 'place') { c = 'warn'; t = 'Kalibrace: ' + CAL_TEXT[Math.min(calPts.length, 3)]; }
-  else if (!cal) t = 'Chybí kalibrace – klepněte na „Kalibrace“';
-  else if (calMode === 'adjust') { c = 'warn'; t = 'Zkontrolujte překryv, pak vyjměte šipky a klepněte na „Terč je prázdný“'; }
-  else if (!det.emptyRef) t = 'Vyjměte šipky z terče a klepněte na „Terč je prázdný“';
-  else if (detState === 'moving') { c = 'warn'; t = 'Pohyb v záběru…'; }
-  else if (detState === 'settling') { c = 'warn'; t = 'Čekám na ustálení…'; }
-  else if (detState === 'blocked') { c = 'bad'; t = 'Velká změna v záběru (ruka? posunutá kamera?) – počkejte, nebo klepněte na „Terč je prázdný“'; }
-  else { c = 'ok'; t = G && G.over ? 'Leg skončil' : 'Připraveno – házejte'; }
+  if (!stream) { c = ''; t = L('Kamera vypnutá – skóre lze zadávat ručně','Camera off – scores can be entered manually'); }
+  else if (calMode === 'place') { c = 'warn'; t = L('Kalibrace: ','Calibration: ') + calT(Math.min(calPts.length, 3)); }
+  else if (!cal) t = L('Chybí kalibrace – klepněte na „Kalibrace“','Not calibrated – tap “Calibrate”');
+  else if (calMode === 'adjust') { c = 'warn'; t = L('Zkontrolujte překryv, pak vyjměte šipky a klepněte na „Terč je prázdný“','Check the overlay, then remove the darts and tap “Board is empty”'); }
+  else if (!det.emptyRef) t = L('Vyjměte šipky z terče a klepněte na „Terč je prázdný“','Remove the darts and tap “Board is empty”');
+  else if (detState === 'moving') { c = 'warn'; t = L('Pohyb v záběru…','Motion in view…'); }
+  else if (detState === 'settling') { c = 'warn'; t = L('Čekám na ustálení…','Waiting to settle…'); }
+  else if (detState === 'blocked') { c = 'bad'; t = L('Velká změna v záběru (ruka? posunutá kamera?) – počkejte, nebo klepněte na „Terč je prázdný“','Big change in view (hand? moved camera?) – wait, or tap “Board is empty”'); }
+  else { c = 'ok'; t = G && G.over ? L('Leg skončil','Leg finished') : L('Připraveno – házejte','Ready – throw'); }
   $('dot').className = 'dot ' + c; $('status').textContent = t;
 }
 const dbgc = $('dbg'), dctx = dbgc.getContext('2d'), dimg = dctx.createImageData(RS, RS);
@@ -1159,10 +1183,147 @@ function drawDebug(){
   const vx = fp.x - CEN, vy = fp.y - CEN, vl = Math.hypot(vx, vy) || 1, k = Math.min(1, 220 / vl);
   dctx.strokeStyle = '#4aa3ff'; dctx.lineWidth = 2; dctx.beginPath(); dctx.moveTo(CEN, CEN); dctx.lineTo(CEN + vx * k, CEN + vy * k); dctx.stroke();
   if (lastTip){ const x = CEN + lastTip.x * SC, y = CEN + lastTip.y * SC; dctx.strokeStyle = '#ff3b3b'; dctx.lineWidth = 2; dctx.beginPath(); dctx.arc(x, y, 8, 0, 7); dctx.stroke(); }
-  $('dbgInfo').textContent = `stav: ${detState}\nzměněných pixelů: ${det.info.total}, bloků: ${det.info.comps}\n` +
-    `kamera (pata) v mm: x=${det.foot.x.toFixed(0)} y=${det.foot.y.toFixed(0)} vzdálenost od terče≈${Math.abs(cal ? cal.foot.z : 0).toFixed(0)}\n` +
-    (lastTip ? `poslední špička: x=${lastTip.x.toFixed(1)} y=${lastTip.y.toFixed(1)} mm` : '') +
-    `\nModrá čára ukazuje směr ke kameře (špička = konec šipky blíž k ní). Červeně změny proti základu.`;
+  $('dbgInfo').textContent = `${L('stav','state')}: ${detState}\n${L('změněných pixelů','changed pixels')}: ${det.info.total}, ${L('bloků','blobs')}: ${det.info.comps}\n` +
+    `${L('kamera (pata) v mm','camera (foot) in mm')}: x=${det.foot.x.toFixed(0)} y=${det.foot.y.toFixed(0)} ${L('vzdálenost od terče','distance from board')}≈${Math.abs(cal ? cal.foot.z : 0).toFixed(0)}\n` +
+    (lastTip ? `${L('poslední špička','last tip')}: x=${lastTip.x.toFixed(1)} y=${lastTip.y.toFixed(1)} mm` : '') +
+    '\n' + L('Modrá čára ukazuje směr ke kameře (špička = konec šipky blíž k ní). Červeně změny proti základu.','The blue line points toward the camera (tip = the end of the dart closer to it). Red = changes against the baseline.');
+}
+
+
+// ---------- nápověda + jazyk ----------
+const HELP = () => [
+ ['x01', L('X01 (301 / 501 / 701)','X01 (301 / 501 / 701)'), L(
+  `<p>Každý hráč začíná na zvolených bodech (301, 501 nebo 701). Za kolo hodí tři šipky a jejich součet se odečte. Cílem je dostat se přesně na <b>0</b>.</p>
+   <ul><li><b>Double-out:</b> poslední šipka musí být double (nebo vnitřní Bull = 50). Skončíte-li na 1 nebo pod nulou, nebo na nule bez double, je to <b>BUST</b> – skóre se vrátí na začátek kola.</li>
+   <li><b>Bez double:</b> stačí dojít přesně na 0 libovolným zásahem.</li>
+   <li>Pod skóre hráče se zobrazuje návrh zavření (např. <code>T20 · D20</code>), když je na dosah.</li>
+   <li>Ø je průměr na 3 šipky. „Výhry“ jsou vyhrané legy; po výhře začíná další leg jiný hráč.</li></ul>`,
+  `<p>Every player starts on the chosen score (301, 501 or 701). In each round you throw three darts and their total is subtracted. The goal is to reach exactly <b>0</b>.</p>
+   <ul><li><b>Double-out:</b> the last dart must be a double (or the inner Bull = 50). Finishing on 1, below zero, or on zero without a double is a <b>BUST</b> – the score returns to its value at the start of the round.</li>
+   <li><b>Straight-out:</b> any hit that takes you exactly to 0 is enough.</li>
+   <li>A checkout suggestion (e.g. <code>T20 · D20</code>) appears under the player’s score when one is in reach.</li>
+   <li>Ø is the average per 3 darts. “Wins” counts legs won; after a win a different player starts the next leg.</li></ul>`)],
+ ['cricket', 'Cricket', L(
+  `<p>Hraje se jen o čísla <b>20, 19, 18, 17, 16, 15 a Bull</b> (v tabulce „B“). Číslo <b>zavřete třemi značkami</b>: single = 1 značka, double = 2, triple = 3. Vnější Bull je 1 značka, vnitřní 2. Zásahy na ostatní čísla se nepočítají.</p>
+   <p>Symboly v tabulce: <code>/</code> = 1 značka, <code>✕</code> = 2, <code>⊗</code> = zavřeno. Číslo zavřené všemi hráči je ztlumené – už se o něj nehraje.</p>
+   <h4>Klasický</h4><p>Máte-li číslo zavřené a aspoň jeden soupeř ho ještě ne, každá další značka vám přidá body (hodnota čísla, Bull = 25). Vyhrává ten, kdo zavře všechna čísla a má přitom <b>nejvyšší skóre</b> (nebo shodné).</p>
+   <h4>Cut-throat</h4><p>Přebytečné značky přidávají body <b>soupeřům</b>, kteří číslo ještě nezavřeli. Vyhrává ten, kdo zavře všechna čísla a má <b>nejnižší skóre</b>.</p>`,
+  `<p>Only the numbers <b>20, 19, 18, 17, 16, 15 and Bull</b> (shown as “B”) count. You <b>close</b> a number with <b>three marks</b>: single = 1 mark, double = 2, triple = 3. The outer Bull is 1 mark, the inner Bull 2. Hits on any other number are ignored.</p>
+   <p>Symbols in the table: <code>/</code> = 1 mark, <code>✕</code> = 2, <code>⊗</code> = closed. A number closed by everyone is dimmed – it is dead.</p>
+   <h4>Classic</h4><p>If you have closed a number and at least one opponent has not, every further mark scores the number’s value (Bull = 25). You win by closing every number while having the <b>highest score</b> (or tied).</p>
+   <h4>Cut-throat</h4><p>Extra marks give points to the <b>opponents</b> who have not closed that number yet. You win by closing every number while having the <b>lowest score</b>.</p>`)],
+ ['countup', 'Count-up', L(
+  `<p>Zvolíte počet kol (5, 8 nebo 10). Každá šipka přičítá své body (single, double, triple se počítají normálně, Bull 25/50). Po posledním kole vyhrává <b>nejvyšší součet</b>; při shodě je remíza.</p>`,
+  `<p>Choose the number of rounds (5, 8 or 10). Every dart adds its points (single, double and triple count normally, Bull 25/50). After the last round the <b>highest total</b> wins; equal totals are a draw.</p>`)],
+ ['atc', 'Around the Clock', L(
+  `<p>Trefujte čísla <b>1 až 20 po řadě</b>, nakonec <b>Bull</b> (vnější i vnitřní). Zásah libovolného pole správného čísla (single, double i triple) posune na další číslo – jen o jedno. Šipka vedle nic nemění. Vyhrává ten, kdo první trefí Bull.</p>`,
+  `<p>Hit the numbers <b>1 to 20 in order</b>, then the <b>Bull</b> (outer or inner). A hit on any part of the right number (single, double or triple) advances you to the next number – by one only. A dart that misses changes nothing. The first to hit the Bull wins.</p>`)],
+ ['setup', L('Kamera a umístění telefonu','Camera and phone placement'), L(
+  `<ol><li>Připevněte telefon <b>pevně</b> (stativ, držák, opřený o zeď) – po kalibraci se s ním nesmí hýbat. Jakmile se pohne, kalibraci opakujte.</li>
+   <li>V záběru musí být <b>celý terč včetně vnějšího okraje double</b> a hlavně šipky zapíchnuté v desce.</li>
+   <li>Čím víc terč vidíte zepředu, tím přesnější je výsledek. Ostrý úhel z boku zhoršuje přesnost. Jedna kamera nevidí do hloubky, proto jsou zásahy těsně u drátů nejméně spolehlivé.</li>
+   <li>Světlo má být stálé a rovnoměrné. Vyhněte se blikání, ostrým stínům hráče a odleskům. Aplikace vyrovnává pomalou změnu jasu, ale ne prudké změny.</li>
+   <li>Povolte kameru v prohlížeči. Funguje jen přes HTTPS (adresa na GitHub Pages ho má). Přední/zadní kameru přepnete tlačítkem „Přepnout kameru“.</li></ol>`,
+  `<ol><li>Mount the phone <b>firmly</b> (tripod, holder, leaned on a wall) – it must not move after calibration. If it moves, calibrate again.</li>
+   <li>The view must contain the <b>whole board including the outer edge of the double ring</b>, and clearly the darts sticking in it.</li>
+   <li>The more frontal the view of the board, the better the accuracy. A sharp angle from the side makes it worse. A single camera has no depth, so hits very close to the wires are the least reliable.</li>
+   <li>Lighting should be steady and even. Avoid flicker, hard shadows from the player and glare. The app compensates slow brightness drift, but not sudden changes.</li>
+   <li>Allow camera access in the browser. It only works over HTTPS (the GitHub Pages address has it). Switch front/rear camera with “Switch camera”.</li></ol>`)],
+ ['calib', L('Kalibrace krok za krokem','Calibration step by step'), L(
+  `<ol><li>Klepněte na <b>Spustit kameru</b>, pak na <b>Kalibrace</b>.</li>
+   <li>Označte 4 body na <b>vnějším okraji dvojitého pole</b>, vždy na drátu mezi dvěma čísly: <b>20|1</b>, <b>6|13</b>, <b>3|19</b>, <b>11|8</b>. Určujte podle čísel na terči (20 je nahoře), ne podle okraje obrazovky.</li>
+   <li>Stiskněte a držte prst, v lupě doladíte polohu, pustením bod potvrdíte.</li>
+   <li>Zkontrolujte <b>zelený překryv</b>: kruhy a čáry musí ležet přesně na drátech terče a čísla musí sedět. Body můžete přetáhnout.</li>
+   <li>Vyjměte všechny šipky a klepněte na <b>Terč je prázdný</b>. Tím se uloží základní obraz prázdného terče, se kterým se porovnává každá nová šipka.</li></ol>
+   <p class="tip">Kalibrace se ukládá do telefonu (pro stejné rozlišení kamery). „Terč je prázdný“ klepněte znovu po každém posunu telefonu nebo výrazné změně světla.</p>`,
+  `<ol><li>Tap <b>Start camera</b>, then <b>Calibrate</b>.</li>
+   <li>Mark 4 points on the <b>outer edge of the double ring</b>, always on the wire between two numbers: <b>20|1</b>, <b>6|13</b>, <b>3|19</b>, <b>11|8</b>. Go by the numbers on the board (20 is at the top), not by the screen edge.</li>
+   <li>Press and hold, fine-tune the position in the magnifier, release to confirm.</li>
+   <li>Check the <b>green overlay</b>: circles and lines must lie exactly on the board wires and the numbers must match. You can drag the points.</li>
+   <li>Remove all darts and tap <b>Board is empty</b>. This stores the reference image of the empty board that every new dart is compared against.</li></ol>
+   <p class="tip">The calibration is stored on the phone (for the same camera resolution). Tap “Board is empty” again after any phone movement or a big change in light.</p>`)],
+ ['flow', L('Jak probíhá hra s kamerou','How a camera game flows'), L(
+  `<ol><li>Hráč hodí šipku. Aplikace počká, až se obraz <b>ustálí</b> (status „Čekám na ustálení…“), a šipku zapíše; do kola se počítají až tři.</li>
+   <li>Po třetí šipce se objeví výzva k vyndání šipek. Jakmile terč <b>zůstane prázdný</b>, přepne se další hráč.</li>
+   <li>Velká změna v záběru (ruka, posunutá kamera) je označena jako „blokováno“ – počkejte, nebo klepněte na „Terč je prázdný“.</li>
+   <li>Chybný nebo chybějící zásah opravíte ručně (viz Ovládání).</li></ol>`,
+  `<ol><li>A player throws a dart. The app waits for the image to <b>settle</b> (status “Waiting to settle…”), then records the dart; up to three count per round.</li>
+   <li>After the third dart you are asked to remove the darts. Once the board <b>stays empty</b>, the next player starts.</li>
+   <li>A big change in view (a hand, a moved camera) is shown as “blocked” – wait, or tap “Board is empty”.</li>
+   <li>A wrong or missing hit can be fixed by hand (see Controls).</li></ol>`)],
+ ['tech', L('Technické nastavení (⚙)','Technical settings (⚙)'), L(
+  `<ul><li><b>Hlasový výstup:</b> přečte skóre kola nahlas (jazyk podle zvoleného jazyka aplikace).</li>
+   <li><b>Citlivost kamery</b> (výchozí 75): <i>nižší číslo = citlivější</i>. Snižte, když aplikace šipky přehlíží (tmavé šipky, slabé světlo). Zvyšte, když vidí šipky navíc kvůli stínům, šumu nebo odleskům.</li>
+   <li><b>Doba ustálení</b> (výchozí 5 snímků): kolik snímků musí být klidných, než se šipka vyhodnotí. Víc = jistější, ale pomalejší. Méně = rychlejší, ale může zapsat šipku, která se ještě chvěje.</li>
+   <li><b>Výška špičky (mm)</b> (výchozí 2): oprava na to, že špička šipky je nad deskou. Zvyšte, pokud zásahy vycházejí systematicky dál od kamery, než kde šipka opravdu je.</li>
+   <li><b>Obrátit směr špičky:</b> zapněte, pokud aplikace bere za špičku peří místo hrotu (zásahy jsou pak posunuté o délku šipky).</li></ul>
+   <h4>Ladění (🔍)</h4><p>Zobrazí narovnaný pohled na terč: <span style="color:#ff3b3b">červeně</span> jsou změny proti prázdnému terči, <span style="color:#4aa3ff">modrá čára</span> míří ke kameře (špička je konec šipky blíž k ní), červený kroužek je poslední nalezená špička. Pro ladění si poznamenejte, kam šipka skutečně zapadla, a porovnejte s tím, co aplikace zapsala.</p>`,
+  `<ul><li><b>Voice output:</b> reads the round score aloud (language follows the app language).</li>
+   <li><b>Camera sensitivity</b> (default 75): <i>lower number = more sensitive</i>. Lower it if the app misses darts (dark darts, dim light). Raise it if it sees phantom darts caused by shadows, noise or glare.</li>
+   <li><b>Settle time</b> (default 5 frames): how many calm frames are needed before a dart is scored. More = safer but slower. Fewer = faster but may record a dart that is still wobbling.</li>
+   <li><b>Tip height (mm)</b> (default 2): a correction for the dart tip sitting above the board surface. Raise it if hits come out systematically farther from the camera than where the dart really is.</li>
+   <li><b>Reverse tip direction:</b> turn on if the app takes the flight instead of the point as the tip (hits are then shifted by the dart’s length).</li></ul>
+   <h4>Debug (🔍)</h4><p>Shows the rectified top-down view of the board: <span style="color:#ff3b3b">red</span> marks changes against the empty board, the <span style="color:#4aa3ff">blue line</span> points toward the camera (the tip is the end of the dart closer to it), the red circle is the last tip found. For tuning, note where the dart really landed and compare it with what the app recorded.</p>`)],
+ ['ctrl', L('Ovládání','Controls'), L(
+  `<ul><li><b>Klepnutí na šipku v kole</b> (čip nahoře) otevře opravu: vyberte Single/Double/Triple a číslo, nebo šipku smažte.</li>
+   <li><b>＋ ručně</b> zadá šipku bez kamery. Aplikace jde používat i úplně bez kamery.</li>
+   <li><b>↶ Zpět</b> vrátí poslední akci (šipku, přepnutí hráče).</li>
+   <li><b>Přeskočit / Další hráč</b> ukončí kolo, i když nebylo hozeno všechno.</li>
+   <li><b>Klepnutí na jméno hráče</b> ho přejmenuje.</li>
+   <li><b>Nová hra</b> smaže rozehranou hru a nabídne režim, počet hráčů (2–6) a možnosti.</li>
+   <li><b>Velikost náhledu</b> zvětší/zmenší obraz z kamery. Rozehraná hra i nastavení se ukládají do telefonu.</li></ul>`,
+  `<ul><li><b>Tap a dart in the round</b> (the chips at the top) to edit it: choose Single/Double/Triple and the number, or delete the dart.</li>
+   <li><b>＋ manual</b> enters a dart without the camera. The app can also be used with no camera at all.</li>
+   <li><b>↶ Undo</b> reverts the last action (a dart, a player change).</li>
+   <li><b>Skip / Next player</b> ends the round even if not all darts were thrown.</li>
+   <li><b>Tap a player’s name</b> to rename them.</li>
+   <li><b>New game</b> erases the game in progress and offers the mode, number of players (2–6) and options.</li>
+   <li><b>Preview size</b> enlarges/shrinks the camera view. The game in progress and the settings are saved on the phone.</li></ul>`)],
+ ['trouble', L('Když něco nefunguje','Troubleshooting'), L(
+  `<ul><li><b>Zásahy jsou posunuté stejným směrem:</b> upravte Výšku špičky, případně Obrátit směr špičky; ověřte, že zelený překryv sedí na drátech (kalibrace).</li>
+   <li><b>Šipky navíc / duchové:</b> zvyšte Citlivost (číslo), zlepšete světlo, zvyšte Dobu ustálení.</li>
+   <li><b>Šipky se nezapisují:</b> snižte Citlivost, zkontrolujte, že je aplikace „Připraveno – házejte“ a že je klepnuto na „Terč je prázdný“.</li>
+   <li><b>Hlásí se „Velká změna v záběru“:</b> v záběru je ruka nebo se pohnul telefon. Počkejte, případně znovu kalibrujte.</li>
+   <li><b>Kamera se nespustí:</b> povolte ji v prohlížeči a otevřete stránku přes HTTPS.</li>
+   <li>Jedna kamera má své hranice – nejistý zásah vždy opravte ručně.</li></ul>`,
+  `<ul><li><b>Hits are shifted in the same direction:</b> adjust Tip height, or try Reverse tip direction; verify that the green overlay sits on the wires (calibration).</li>
+   <li><b>Extra / phantom darts:</b> raise Sensitivity (the number), improve the light, raise Settle time.</li>
+   <li><b>Darts are not recorded:</b> lower Sensitivity, check the status says “Ready – throw” and that “Board is empty” has been tapped.</li>
+   <li><b>“Big change in view” appears:</b> a hand is in view or the phone moved. Wait, or calibrate again.</li>
+   <li><b>Camera will not start:</b> allow it in the browser and open the page over HTTPS.</li>
+   <li>A single camera has its limits – always correct an uncertain hit by hand.</li></ul>`)],
+];
+function buildHelp(){
+  const H = HELP();
+  $('helpTitle').textContent = L('Nápověda','Help');
+  $('helpClose').textContent = L('Zavřít','Close');
+  $('helpLang').textContent = LANG === 'en' ? '🌐 Čeština' : '🌐 English';
+  $('helpToc').innerHTML = H.map(h => `<button data-go="${h[0]}">${h[1].replace(/ \(.*$/, '')}</button>`).join('');
+  $('helpBody').innerHTML = H.map(h => `<h3 id="h-${h[0]}">${h[1]}</h3>${h[2]}`).join('');
+}
+function openHelp(){
+  buildHelp(); $('helpModal').hidden = false;
+  const sheet = document.querySelector('#helpModal .sheet'); sheet.scrollTop = 0;
+  const t = G && document.getElementById('h-' + (G.mode === 'x01' ? 'x01' : G.mode));
+  if (t) setTimeout(() => { sheet.scrollTop = t.offsetTop - sheet.offsetTop - 4; }, 0);
+}
+function setLang(lang){
+  LANG = lang;
+  document.documentElement.lang = lang;
+  document.title = L('Šipky', 'Darts');
+  document.querySelectorAll('[data-en]').forEach(el => {
+    if (el.dataset.cs === undefined) el.dataset.cs = el.innerHTML;
+    el.innerHTML = lang === 'en' ? el.dataset.en : el.dataset.cs;
+  });
+  const dn = n => typeof n === 'string' ? n.replace(/^(Hráč|Player) (\d)$/, (m, a, d) => L('Hráč', 'Player') + ' ' + d) : n;
+  S.names = S.names.map(dn);
+  if (G) G.players.forEach(p => { p.name = dn(p.name); });
+  $('btnSettings').setAttribute('aria-label', L('Nastavení', 'Settings'));
+  $('btnHelp').setAttribute('aria-label', L('Nápověda', 'Help'));
+  $('btnLang').textContent = lang === 'en' ? 'CZ' : 'EN';
+  $('btnCam').textContent = stream ? L('⏹ Vypnout kameru', '⏹ Stop camera') : L('📷 Spustit kameru', '📷 Start camera');
+  if (calMode !== 'none') updateCalHelp();
+  buildHelp(); saveS(); if (G) saveG(); if (G) render();
 }
 
 // ---------- ovládání ----------
@@ -1170,7 +1331,7 @@ function bind(){
   $('players').addEventListener('click', e => {
     const n = e.target.closest('[data-name]');
     if (!n) return;
-    const i = +n.dataset.name, v = prompt('Jméno hráče', G.players[i].name);
+    const i = +n.dataset.name, v = prompt(L('Jméno hráče','Player name'), G.players[i].name);
     if (v && v.trim()){ G.players[i].name = v.trim().slice(0, 18); S.names[i] = G.players[i].name; saveS(); saveG(); render(); }
   });
   $('chips').addEventListener('click', e => {
@@ -1204,7 +1365,16 @@ function bind(){
   $('btnCam').onclick = () => stream ? stopCamera() : startCamera();
   $('btnCal').onclick = startCalibration;
   $('btnBase').onclick = setBaseline;
-  $('btnSwitch').onclick = () => { facing = facing === 'environment' ? 'user' : 'environment'; if (stream) startCamera(); else toast('Přepnuto: ' + (facing === 'user' ? 'přední kamera' : 'zadní kamera')); };
+  $('btnHelp').onclick = openHelp;
+  $('helpClose').onclick = () => { $('helpModal').hidden = true; };
+  $('btnLang').onclick = () => setLang(LANG === 'en' ? 'cs' : 'en');
+  $('helpLang').onclick = () => { setLang(LANG === 'en' ? 'cs' : 'en'); };
+  $('helpToc').addEventListener('click', e => {
+    const b = e.target.closest('button[data-go]'); if (!b) return;
+    const sheet = document.querySelector('#helpModal .sheet'), t = document.getElementById('h-' + b.dataset.go);
+    sheet.scrollTop = t.offsetTop - sheet.offsetTop - 4;
+  });
+  $('btnSwitch').onclick = () => { facing = facing === 'environment' ? 'user' : 'environment'; if (stream) startCamera(); else toast(L('Přepnuto: ','Switched to: ') + (facing === 'user' ? L('přední kamera','front camera') : L('zadní kamera','rear camera'))); };
   $('btnSize').onclick = () => { S.big = !S.big; saveS(); layoutCam(); };
   $('btnDbg').onclick = () => { $('dbgBox').hidden = !$('dbgBox').hidden; if (!$('dbgBox').hidden && cal && stream){ captureRect(); drawDebug(); } };
   $('btnSettings').onclick = () => {
@@ -1219,17 +1389,17 @@ function bind(){
     S.sens = +$('setSens').value; S.settle = +$('setSettle').value; S.tipH = +$('setShift').value;
     saveS(); applySettings(); render(); $('setModal').hidden = true;
   };
-  [$('padModal'), $('setModal'), $('newModal')].forEach(m => m.addEventListener('click', e => { if (e.target === m) m.hidden = true; }));
+  [$('padModal'), $('setModal'), $('newModal'), $('helpModal')].forEach(m => m.addEventListener('click', e => { if (e.target === m) m.hidden = true; }));
 }
 
 // ---------- start ----------
-buildPad(); bind(); applySettings();
+buildPad(); bind(); applySettings(); buildHelp();
 if (!loadG()) newGame();
-render(); layoutCam();
+setLang('cs'); layoutCam();
 setInterval(tick, 110);
 if (/[?&]test\b/.test(location.search)){
   window.__darts = {det, get G(){ return G; }, get cal(){ return cal; }, S, scorePoint, tick, startCamera, computeCal,
-    setCal(pts){ calPts = pts; calMode = 'none'; computeCal(); }, setBaseline, get state(){ return detState; }, get calPts(){ return calPts; }};
+    setCal(pts){ calPts = pts; calMode = 'none'; computeCal(); }, setBaseline, get state(){ return detState; }, get calPts(){ return calPts; }, setLang, openHelp};
 }
 </script>
 </body>
