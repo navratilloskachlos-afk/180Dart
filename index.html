@@ -318,7 +318,7 @@ button[disabled]{opacity:.45}
     <h2 data-en="New game">Nová hra</h2>
     <div class="ngh" data-en="Game">Hra</div>
     <div class="mult" style="grid-template-columns:repeat(2,1fr)">
-      <button data-k="mode" data-v="x01">X01</button><button data-k="mode" data-v="cricket">Cricket</button><button data-k="mode" data-v="countup">Count-up</button><button data-k="mode" data-v="atc">Around the Clock</button><button data-k="mode" data-v="free" data-en="Free practice" style="grid-column:1/-1">Volný nácvik</button>
+      <button data-k="mode" data-v="x01">X01</button><button data-k="mode" data-v="cricket">Cricket</button><button data-k="mode" data-v="countup">Count-up</button><button data-k="mode" data-v="atc">Around the Clock</button>
     </div>
     <div id="ngX01">
       <div class="ngh" data-en="Start score">Začátek</div>
@@ -335,11 +335,10 @@ button[disabled]{opacity:.45}
       <div class="mult" style="grid-template-columns:1fr 1fr"><button data-k="cricket" data-v="classic" data-en="Classic">Klasický</button><button data-k="cricket" data-v="cut">Cut-throat</button></div>
       <div class="ngh" data-en="Numbers 20 to 15 and Bull: close each with three marks. Classic: further hits score for you. Cut-throat: points go to your opponents, lowest score wins.">Čísla 20 až 15 a Bull: každé zavřete třemi značkami. Klasický: za další zásahy bodujete vy. Cut-throat: body dostávají soupeři, vyhrává nejnižší skóre.</div>
     </div>
-    <div id="ngFR" class="ngh" style="margin-top:8px" data-en="No rules, no target: throw as many rounds as you like. It counts the total, the average per 3 darts and your best round. You can play alone. The session is not saved to history; it ends with “New game”.">Bez pravidel a cíle: házíte kolik kol chcete. Počítá se součet, průměr na 3 šipky a nejlepší kolo. Můžete hrát i sám. Cvičení se neukládá do historie, končí tlačítkem „Nová hra“.</div>
     <div id="ngAT" class="ngh" style="margin-top:8px" data-en="Hit the numbers 1 to 20 in order, then Bull. First to finish wins.">Trefujte čísla 1 až 20 po řadě, nakonec Bull. Vyhrává, kdo je první.</div>
     <div class="ngh" data-en="Players">Počet hráčů</div>
-    <div id="ngCount" class="mult" style="grid-template-columns:repeat(5,1fr)">
-      <button data-k="n" data-v="1" id="ngOne" hidden>1</button><button data-k="n" data-v="2">2</button><button data-k="n" data-v="3">3</button><button data-k="n" data-v="4">4</button><button data-k="n" data-v="5">5</button><button data-k="n" data-v="6">6</button>
+    <div class="mult" style="grid-template-columns:repeat(5,1fr)">
+      <button data-k="n" data-v="2">2</button><button data-k="n" data-v="3">3</button><button data-k="n" data-v="4">4</button><button data-k="n" data-v="5">5</button><button data-k="n" data-v="6">6</button>
     </div>
     <p style="margin:10px 0 0;color:var(--color-text-secondary);font-size:13px" data-en="The current game will be erased. Tap a name to rename a player.">Aktuální hra se smaže. Jména hráčů změníte klepnutím na jméno.</p>
     <div class="row"><button id="newCancel" class="ghost" data-en="Cancel">Zrušit</button><button id="ngGo" class="primary" data-en="Start game">Začít hru</button></div>
@@ -726,14 +725,14 @@ function saveS(){ try { localStorage.setItem(LS, JSON.stringify(S)); } catch(e){
 // ---------- hra ----------
 let G = null, undoStack = [];
 const CR_NUMS = [20, 19, 18, 17, 16, 15, 25];
-function mkPlayer(name){ return {name, legs:0, darts:0, last:0, rem:0, score:0, hi:0, target:1, cm:[0,0,0,0,0,0,0]}; }
-function resetPlayer(p){ p.darts = 0; p.last = 0; p.hi = 0; p.rem = G.opts.start; p.score = 0; p.target = 1; p.cm = [0,0,0,0,0,0,0]; }
+function mkPlayer(name){ return {name, legs:0, darts:0, last:0, rem:0, score:0, target:1, cm:[0,0,0,0,0,0,0]}; }
+function resetPlayer(p){ p.darts = 0; p.last = 0; p.rem = G.opts.start; p.score = 0; p.target = 1; p.cm = [0,0,0,0,0,0,0]; }
 function snap(p){ return {rem:p.rem, score:p.score, target:p.target, darts:p.darts}; }
 function mkTurn(p){ return {darts:[], start:snap(p), all:G.players.map(q => ({cm:(q.cm || []).slice(), score:q.score})), bust:false, win:false, done:false}; }
 function newGame(mode, opts, n){
   mode = mode || S.mode;
   opts = Object.assign({start:S.start, out:S.out, rounds:S.rounds, cricket:S.cricket}, opts || {});
-  n = Math.max(mode === 'free' ? 1 : 2, Math.min(6, n || S.count || 2));
+  n = Math.max(2, Math.min(6, n || S.count || 2));
   Object.assign(S, {mode, start:opts.start, out:opts.out, rounds:opts.rounds, cricket:opts.cricket, count:n}); saveS();
   G = {mode, opts, players:S.names.slice(0, n).map(mkPlayer), cur:0, starter:0, turnNo:0, over:null, turn:null, log:[], histId:null};
   G.players.forEach(resetPlayer);
@@ -743,7 +742,7 @@ function saveG(){ try { localStorage.setItem(LSG, JSON.stringify(G)); } catch(e)
 function loadG(){
   try {
     const j = JSON.parse(localStorage.getItem(LSG) || 'null');
-    if (j && j.mode && j.opts && j.players && j.players.length >= (j.mode === 'free' ? 1 : 2) && j.players.length <= 6 && j.turn && j.turn.start) { G = j; G.over = null; if (!G.log) G.log = []; return true; }
+    if (j && j.mode && j.opts && j.players && j.players.length >= 2 && j.players.length <= 6 && j.turn && j.turn.start) { G = j; G.over = null; if (!G.log) G.log = []; return true; }
   } catch(e){}
   return false;
 }
@@ -759,7 +758,6 @@ function atcHit(d, tg){ return tg <= 20 ? (d.num === tg && d.mult > 0) : d.num =
 function atcLabel(tg){ return tg <= 20 ? String(tg) : tg === 21 ? 'Bull' : '✓'; }
 function modeName(m, o){
   if (m === 'x01') return `${o.start} · ${o.out === 'double' ? 'double-out' : L('bez double','straight-out')}`;
-  if (m === 'free') return L('Volný nácvik','Free practice');
   if (m === 'countup') return `Count-up · ${o.rounds} ${L('kol','rounds')}`;
   if (m === 'cricket') return `Cricket · ${o.cricket === 'cut' ? 'cut-throat' : L('klasický','classic')}`;
   return 'Around the Clock';
@@ -778,7 +776,7 @@ function evalTurn(){
       if (nr === 0){ win = true; break; }
     }
     p.rem = bust ? s.rem : rem;
-  } else if (G.mode === 'countup' || G.mode === 'free'){
+  } else if (G.mode === 'countup'){
     let sc = s.score;
     for (const d of t.darts){ n++; sc += d.score; }
     p.score = sc;
@@ -824,7 +822,7 @@ function finishCountUp(){
 function turnTotal(){
   const t = G.turn, p = G.players[G.cur], s = t.start;
   if (G.mode === 'x01') return t.bust ? 0 : s.rem - p.rem;
-  if (G.mode === 'countup' || G.mode === 'free') return p.score - s.score;
+  if (G.mode === 'countup') return p.score - s.score;
   if (G.mode === 'cricket') return t.darts.reduce((a, d) => a + (d.mult > 0 && CR_NUMS.includes(d.num) ? d.mult : 0), 0);
   return Math.min(p.target, 21) - s.target + (p.target > 21 ? 1 : 0);
 }
@@ -835,7 +833,7 @@ try { HIST = JSON.parse(localStorage.getItem(LSH) || '[]') || []; if (!Array.isA
 function saveH(){ try { localStorage.setItem(LSH, JSON.stringify(HIST)); } catch(e){} }
 function logTurn(){
   const t = G.turn;
-  if (G.mode === 'free' || t.logged || !t.darts.length) return;
+  if (t.logged || !t.darts.length) return;
   t.logged = true;
   G.log.push({p:G.cur, d:t.darts.map(d => [d.num, d.mult, d.score]), tot:turnTotal(), bust:t.bust ? 1 : 0, win:t.win ? 1 : 0, st:t.start.rem});
 }
@@ -875,7 +873,7 @@ function afterDart(){
   const t = G.turn;
   if (G.over) { showWin(); speak(L('Konec hry','Game over')); return; }
   if (t.bust) { speak('Bust'); }
-  else if (t.done && (G.mode === 'x01' || G.mode === 'countup' || G.mode === 'free')) speak(String(turnTotal()));
+  else if (t.done && (G.mode === 'x01' || G.mode === 'countup')) speak(String(turnTotal()));
 }
 function nextTurn(auto){
   if (G.over) return;
@@ -885,7 +883,6 @@ function nextTurn(auto){
   logTurn();
   if (!t.bust && !t.win && t.darts.length < 3 && t.darts.length > 0) p.darts += 3 - t.darts.length;
   p.last = turnTotal();
-  if (G.mode === 'free') p.hi = Math.max(p.hi || 0, p.last);
   G.turnNo++;
   if (G.mode === 'countup' && G.turnNo >= G.opts.rounds * G.players.length){
     finishCountUp(); saveG(); render(); showWin(); return;
@@ -971,7 +968,6 @@ function drawMiniBoard(){
 }
 window.addEventListener('resize', () => { try { drawMiniBoard(); } catch (e) {} });
 
-const nextLbl = () => G.players.length === 1 ? L('Další kolo','Next round') : L('Další hráč','Next player');
 function render(){
   const t = G.turn, o = G.opts, n = G.players.length;
   $('title').textContent = '🎯 ' + modeTitle();
@@ -987,10 +983,9 @@ function render(){
       const c = findCheckout(p.rem, k, o.out === 'double');
       big = p.rem; meta = `Ø ${avg.toFixed(1)} · ${L('poslední','last')} ${p.last}`; co = c ? c.join(' · ') : '';
       if (act && c && !t.done && !t.bust) coBig = `<span>${L('zavření','checkout')}</span>${p.rem} → ${c.join(' · ')}`;
-    } else if (G.mode === 'countup' || G.mode === 'free'){
+    } else if (G.mode === 'countup'){
       const avg = p.darts ? (p.score / p.darts * 3) : 0;
       big = p.score; meta = `Ø ${avg.toFixed(1)} · ${L('poslední','last')} ${p.last}`;
-      if (G.mode === 'free') co = `${L('šipek','darts')} ${p.darts} · ${L('nejlepší kolo','best round')} ${Math.max(p.hi || 0, act ? turnTotal() : 0)}`;
     } else {
       big = atcLabel(p.target); meta = `${L('šipek','darts')} ${p.darts} · ${L('poslední','last')} +${p.last}`;
       co = p.target <= 21 ? `${L('zbývá','left')} ${22 - p.target}` : L('hotovo','done');
@@ -1005,7 +1000,7 @@ function render(){
   }).join('');
   const p = G.players[G.cur];
   const round = Math.min(Math.floor(G.turnNo / n) + 1, o.rounds || 99);
-  $('turnWho').innerHTML = `<b>${esc(p.name)}</b> · ${L('šipka','dart')} ${Math.min(t.darts.length + 1, 3)}/3` + (G.mode === 'countup' ? ` · ${L('kolo','round')} ${round}/${o.rounds}` : G.mode === 'free' ? ` · ${L('kolo','round')} ${Math.floor(G.turnNo / n) + 1}` : '');
+  $('turnWho').innerHTML = `<b>${esc(p.name)}</b> · ${L('šipka','dart')} ${Math.min(t.darts.length + 1, 3)}/3` + (G.mode === 'countup' ? ` · ${L('kolo','round')} ${round}/${o.rounds}` : '');
   $('turnTotal').innerHTML = (G.mode === 'atc' ? L('postup','progress') + ': <b>+' : G.mode === 'cricket' ? L('značky','marks') + ': <b>' : L('kolo','round') + ': <b>') + turnTotal() + '</b>';
   let chips = '';
   for (let i = 0; i < 3; i++){
@@ -1020,9 +1015,9 @@ function render(){
   if (coBig){ cb.hidden = false; cb.innerHTML = coBig; } else cb.hidden = true;
   const b = $('banner');
   if (t.bust){ b.hidden = false; b.className = 'banner bust'; b.textContent = L(`BUST – skóre se vrací na ${t.start.rem}. Vyndejte šipky a stiskněte „Další hráč“.`, `BUST – score returns to ${t.start.rem}. Remove the darts and press “Next player”.`); }
-  else if (t.done && !G.over){ b.hidden = false; b.className = 'banner info'; b.textContent = L(`Kolo je hotové – případně opravte šipky, vyndejte je a stiskněte „${nextLbl()}“.`,`Round complete – fix any dart if needed, remove them and press “${nextLbl()}”.`); }
+  else if (t.done && !G.over){ b.hidden = false; b.className = 'banner info'; b.textContent = L('Kolo je hotové – případně opravte šipky, vyndejte je a stiskněte „Další hráč“.','Round complete – fix any dart if needed, remove them and press “Next player”.'); }
   else b.hidden = true;
-  $('btnNext').textContent = (t.done ? nextLbl() + ' ▶' : L('Přeskočit ▶','Skip ▶'));
+  $('btnNext').textContent = (t.done ? L('Další hráč ▶','Next player ▶') : L('Přeskočit ▶','Skip ▶'));
   $('btnNext').classList.toggle('ready', !!t.done && !G.over);
   setInputUI();
   updateStatus();
@@ -1085,9 +1080,6 @@ function renderNG(){
     const v = /^\d+$/.test(b.dataset.v) ? +b.dataset.v : b.dataset.v;
     b.classList.toggle('on', NG[b.dataset.k] === v);
   });
-  const fr = NG.mode === 'free'; if (!fr && NG.n < 2) NG.n = 2;
-  $('ngOne').hidden = !fr; $('ngCount').style.gridTemplateColumns = fr ? 'repeat(6,1fr)' : 'repeat(5,1fr)'; $('ngFR').hidden = !fr;
-  document.querySelectorAll('#ngCount button[data-k]').forEach(b => b.classList.toggle('on', NG.n === +b.dataset.v));
   $('ngX01').hidden = NG.mode !== 'x01'; $('ngCU').hidden = NG.mode !== 'countup'; $('ngAT').hidden = NG.mode !== 'atc'; $('ngCR').hidden = NG.mode !== 'cricket';
 }
 
@@ -1386,13 +1378,13 @@ function tick(){
 function onEmpty(){
   // Hráč se přepíná POUZE ručně tlačítkem „Další hráč“; prázdný terč jen upozorníme.
   if (G.over) return;
-  if (G.turn.done) toast(L(`Terč je prázdný – stiskněte „${nextLbl()}“`,`Board is empty – press “${nextLbl()}”`));
+  if (G.turn.done) toast(L('Terč je prázdný – stiskněte „Další hráč“','Board is empty – press “Next player”'));
 }
 function onDart(d){
   const sc = scorePoint(d.x, d.y);
   lastTip = {x:d.x, y:d.y}; lastTipT = Date.now(); drawOverlay();
   if (G.over) return;
-  if (G.turn.done){ toast(L(`Kolo je hotové – šipka navíc ignorována. Stiskněte „${nextLbl()}“.`,`Round complete – extra dart ignored. Press “${nextLbl()}”.`), true); return; }
+  if (G.turn.done){ toast(L('Kolo je hotové – šipka navíc ignorována. Stiskněte „Další hráč“.','Round complete – extra dart ignored. Press “Next player”.'), true); return; }
   if (G.turn.darts.some(o => o.pos && Math.hypot(o.pos.x - d.x, o.pos.y - d.y) < 6)) return;
   const dart = Object.assign({}, sc, {pos:{x:Math.round(d.x * 10) / 10, y:Math.round(d.y * 10) / 10}, src:'cam'});
   if (addDart(dart)){
@@ -1537,15 +1529,6 @@ const HELP = () => [
  ['atc', 'Around the Clock', L(
   `<p>Trefujte čísla <b>1 až 20 po řadě</b>, nakonec <b>Bull</b> (vnější i vnitřní). Zásah libovolného pole správného čísla (single, double i triple) posune na další číslo – jen o jedno. Šipka vedle nic nemění. Vyhrává ten, kdo první trefí Bull.</p>`,
   `<p>Hit the numbers <b>1 to 20 in order</b>, then the <b>Bull</b> (outer or inner). A hit on any part of the right number (single, double or triple) advances you to the next number – by one only. A dart that misses changes nothing. The first to hit the Bull wins.</p>`)],
- ['free', L('Volný nácvik','Free practice'), L(
-  `<p>Házíte <b>bez pravidel a bez cíle</b> – hra nikdy nekončí sama. Každá šipka přičítá své body, aplikace ukazuje <b>celkový součet</b>, <b>průměr na 3 šipky</b>, počet šipek a <b>nejlepší kolo</b>. Kolo má tři šipky a hráče (nebo další kolo) přepnete tlačítkem dole jako v ostatních hrách.</p>
-   <ul><li>Můžete hrát <b>sám</b> (jeden hráč) i s více lidmi (až 6).</li>
-   <li>Kamera, ruční zadání i oprava šipek fungují stejně jako jinde.</li>
-   <li>Cvičení <b>se neukládá do historie ani do statistik</b>. Končí tlačítkem „Nová hra“.</li></ul>`,
-  `<p>You throw <b>with no rules and no target</b> – the game never ends by itself. Every dart adds its points and the app shows the <b>total</b>, the <b>average per 3 darts</b>, the number of darts and your <b>best round</b>. A round is three darts and you move on with the button at the bottom, as in the other games.</p>
-   <ul><li>You can play <b>alone</b> (one player) or with several people (up to 6).</li>
-   <li>Camera, manual entry and dart correction work as everywhere else.</li>
-   <li>Practice is <b>not saved to history or statistics</b>. It ends with “New game”.</li></ul>`)],
  ['install', L('Instalace na plochu','Install on the home screen'), L(
   `<ul><li><b>Android (Chrome):</b> menu ⋮ → „Instalovat aplikaci“ nebo „Přidat na plochu“. Je-li instalace dostupná přímo, najdete v ⚙ Nastavení tlačítko „Přidat na plochu“.</li>
    <li><b>iPhone (Safari):</b> tlačítko Sdílet (čtverec se šipkou) → „Přidat na plochu“. Jiný prohlížeč než Safari to na iPhonu neumí.</li></ul>
