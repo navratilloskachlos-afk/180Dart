@@ -99,9 +99,12 @@ button[disabled]{opacity:.45}
 .turnhead{display:flex;justify-content:space-between;align-items:baseline;gap:8px;color:var(--color-text-secondary);font-size:15px;margin-bottom:8px}
 .turnhead b{color:var(--color-text)}
 #turnTotal b{font-size:34px;line-height:1;color:var(--color-primary);font-variant-numeric:tabular-nums}
-.chips{display:grid;grid-template-columns:repeat(3,1fr);gap:var(--gap-sm)}
+.turnrow{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:var(--gap-sm);align-items:stretch}
+.chips{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:var(--gap-sm)}
+#miniBoard{width:92px;height:92px;align-self:center;display:block}
+@media (min-width:760px){#miniBoard{width:112px;height:112px}}
 .chip{border-radius:var(--radius-ctl);border:2px solid transparent;background:var(--color-surface);min-height:78px;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:4px;font-size:17px}
-.chip b{font-size:28px;line-height:1.1;font-weight:800}
+.chip b{font-size:clamp(18px,5.6vw,28px);line-height:1.1;font-weight:800;white-space:nowrap}
 .chip small{font-size:13px;color:var(--color-text-secondary)}
 .chip.empty{background:transparent;border:2px dashed var(--color-border);font-size:26px;color:var(--color-text-secondary)}
 .chip.add{border:2px dashed var(--color-primary-line);color:var(--color-primary);background:transparent;font-weight:700}
@@ -154,6 +157,7 @@ button[disabled]{opacity:.45}
   .chip{min-height:44px;padding:2px}.chip b{font-size:19px}.chip small{font-size:11px}.chip.add,.chip.empty{font-size:15px}
   .cobar{margin-top:5px;padding:3px 6px;font-size:20px}.cobar span{font-size:10px}
   .banner{margin-top:5px;padding:5px 8px;font-size:13px}
+  #miniBoard{display:none}.turnrow{grid-template-columns:minmax(0,1fr)}
   .actions{padding:6px 0 calc(6px + env(safe-area-inset-bottom));gap:6px}
   .actions button{min-height:44px;font-size:15px}#btnNext{font-size:17px}
   .seg button{min-height:38px}
@@ -232,7 +236,7 @@ button[disabled]{opacity:.45}
 
   <section id="turnCard" class="card turn">
     <div class="turnhead"><span id="turnWho"></span><span id="turnTotal"></span></div>
-    <div id="chips" class="chips"></div>
+    <div class="turnrow"><div id="chips" class="chips"></div><canvas id="miniBoard" role="img" aria-label="Terč se šipkami kola"></canvas></div>
     <div id="coBar" class="cobar" hidden></div>
     <div id="banner" class="banner" hidden></div>
   </section>
@@ -913,6 +917,57 @@ function renderCricket(){
   h += '</div><div class="crleg">' + (G.opts.cricket === 'cut' ? L('Cut-throat: body jdou soupeřům, vyhrává nejnižší skóre','Cut-throat: points go to opponents, lowest score wins') : L('Klasický: body za zásahy na čísla, která soupeř ještě nezavřel','Classic: you score on numbers an opponent has not closed yet')) + '</div>';
   $('players').innerHTML = h;
 }
+// Mini-terč: ukazuje, kam dopadly šipky aktuálního kola (kamera = přesná poloha, ručně = střed pole).
+function dartBoardPos(d){
+  if (d.pos) return d.pos;
+  if (d.num === 25) return {x: d.mult === 2 ? 0 : 11, y: 0};
+  const idx = NUMBERS.indexOf(d.num); if (idx < 0) return null;
+  const a = idx * 18 * Math.PI / 180, r = d.mult === 3 ? 103 : d.mult === 2 ? 166 : 134;
+  return {x: r * Math.sin(a), y: -r * Math.cos(a)};
+}
+function drawMiniBoard(){
+  const cv = $('miniBoard'); if (!cv || !G) return;
+  const css = cv.clientWidth; if (!css) return;
+  const dpr = Math.min(window.devicePixelRatio || 1, 3), px = Math.round(css * dpr);
+  if (cv.width !== px){ cv.width = px; cv.height = px; }
+  const g = cv.getContext('2d'), cs = getComputedStyle(document.documentElement);
+  const col = n => cs.getPropertyValue(n).trim();
+  const c = px / 2, k = (c - dpr) / R.DBL_OUT, rad = Math.PI / 180;
+  g.clearRect(0, 0, px, px);
+  for (let i = 0; i < 20; i++){
+    const a0 = (i * 18 - 9 - 90) * rad, a1 = (i * 18 + 9 - 90) * rad;
+    g.fillStyle = col(i % 2 ? '--color-bg' : '--color-surface-raised');
+    g.beginPath(); g.moveTo(c, c); g.arc(c, c, R.DBL_OUT * k, a0, a1); g.closePath(); g.fill();
+    g.fillStyle = col('--color-text-secondary'); g.globalAlpha = i % 2 ? .16 : .34;
+    for (const [ri, ro] of [[R.TRI_IN, R.TRI_OUT], [R.DBL_IN, R.DBL_OUT]]){
+      g.beginPath(); g.arc(c, c, ro * k, a0, a1); g.arc(c, c, ri * k, a1, a0, true); g.closePath(); g.fill();
+    }
+    g.globalAlpha = 1;
+  }
+  g.fillStyle = col('--color-text-secondary');
+  g.globalAlpha = .38; g.beginPath(); g.arc(c, c, R.BULL_OUT * k, 0, 7); g.fill();
+  g.globalAlpha = .7; g.beginPath(); g.arc(c, c, R.BULL_IN * k, 0, 7); g.fill(); g.globalAlpha = 1;
+  g.strokeStyle = col('--color-border'); g.lineWidth = .6 * dpr;
+  for (let i = 0; i < 20; i++){
+    const a = (i * 18 - 9 - 90) * rad;
+    g.beginPath(); g.moveTo(c + R.BULL_OUT * k * Math.cos(a), c + R.BULL_OUT * k * Math.sin(a)); g.lineTo(c + R.DBL_OUT * k * Math.cos(a), c + R.DBL_OUT * k * Math.sin(a)); g.stroke();
+  }
+  g.font = '700 ' + (7 * dpr) + 'px system-ui,sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle';
+  g.fillStyle = col('--color-text-secondary'); g.fillText('20', c, c - 134 * k);
+  const prim = col('--color-primary'), dark = col('--color-bg'), txt = col('--color-text');
+  G.turn.darts.forEach((d, i) => {
+    if (!d || !d.mult) return;
+    const p = dartBoardPos(d); if (!p) return;
+    const x = c + p.x * k, y = c + p.y * k, r = 5.2 * dpr, cam = d.src === 'cam';
+    g.beginPath(); g.arc(x, y, r, 0, 7);
+    g.fillStyle = cam ? prim : dark; g.fill();
+    g.lineWidth = 1.6 * dpr; g.strokeStyle = prim; g.stroke();
+    g.font = '800 ' + (7.5 * dpr) + 'px system-ui,sans-serif';
+    g.fillStyle = cam ? dark : txt; g.fillText(String(i + 1), x, y + .3 * dpr);
+  });
+}
+window.addEventListener('resize', () => { try { drawMiniBoard(); } catch (e) {} });
+
 function render(){
   const t = G.turn, o = G.opts, n = G.players.length;
   $('title').textContent = '🎯 ' + modeTitle();
@@ -955,6 +1010,7 @@ function render(){
     else chips += `<div class="chip empty">–</div>`;
   }
   $('chips').innerHTML = chips;
+  drawMiniBoard();
   const cb = $('coBar');
   if (coBig){ cb.hidden = false; cb.innerHTML = coBig; } else cb.hidden = true;
   const b = $('banner');
@@ -1538,14 +1594,14 @@ const HELP = () => [
    <li><b>Reverse tip direction:</b> turn on if the app takes the flight instead of the point as the tip (hits are then shifted by the dart’s length).</li></ul>
    <h4>Debug (🔍)</h4><p>Shows the rectified top-down view of the board: <span style="color:#ff3b3b">red</span> marks changes against the empty board, the <span style="color:#4aa3ff">blue line</span> points toward the camera (the tip is the end of the dart closer to it), the red circle is the last tip found. For tuning, note where the dart really landed and compare it with what the app recorded.</p>`)],
  ['ctrl', L('Ovládání','Controls'), L(
-  `<ul><li><b>Klepnutí na šipku v kole</b> (čip nahoře) otevře opravu: vyberte Single/Double/Triple a číslo, nebo šipku smažte.</li>
+  `<ul><li><b>Klepnutí na šipku v kole</b> (čip nahoře) otevře opravu: vyberte Single/Double/Triple a číslo, nebo šipku smažte.</li><li><b>Mini‑terč</b> vedle šipek ukazuje, kam dopadly šipky tohoto kola: plná zelená tečka = poloha z kamery, prázdná tečka = ručně zadaná (zobrazí se uprostřed pole). Číslo v tečce je pořadí šipky. Slouží ke kontrole a opravě; klepat na něj nemusíte. Na šířku na malé výšce se skrývá.</li>
    <li><b>📷 Kamera / ✋ Ručně</b> přepíná způsob zadávání, hra se přitom nepřeruší. V ručním režimu se kamera vypne a zásahy zadáváte klepnutím na pole šipky (＋). Aplikace jde používat i úplně bez kamery, např. když telefon nejde položit tak, aby na terč viděl.</li>
    <li><b>↶ Zpět</b> vrátí poslední akci (šipku, přepnutí hráče).</li>
    <li><b>Další hráč / Přeskočit</b> (velké zelené tlačítko dole) ukončí kolo a předá hráče; po třetí šipce pulzuje. Přeskočit funguje i když nebylo hozeno všechno.</li>
    <li><b>Klepnutí na jméno hráče</b> ho přejmenuje.</li>
    <li><b>Nová hra</b> smaže rozehranou hru a nabídne režim, počet hráčů (2–6) a možnosti.</li>
    <li><b>Velikost náhledu</b> zvětší/zmenší obraz z kamery. Rozehraná hra i nastavení se ukládají do telefonu.</li></ul>`,
-  `<ul><li><b>Tap a dart in the round</b> (the chips at the top) to edit it: choose Single/Double/Triple and the number, or delete the dart.</li>
+  `<ul><li><b>Tap a dart in the round</b> (the chips at the top) to edit it: choose Single/Double/Triple and the number, or delete the dart.</li><li><b>Mini board</b> next to the darts shows where this round's darts landed: filled green dot = position from the camera, hollow dot = entered manually (shown at the centre of the field). The number in the dot is the dart order. It is for checking and correcting; you don't need to tap it. Hidden in short landscape.</li>
    <li><b>📷 Camera / ✋ Manual</b> switches the input method without interrupting the game. In manual mode the camera is turned off and you enter hits by tapping a dart slot (＋). The app can also be used with no camera at all, e.g. when the phone cannot be placed to see the board.</li>
    <li><b>↶ Undo</b> reverts the last action (a dart, a player change).</li>
    <li><b>Next player / Skip</b> (the big green button at the bottom) ends the round and hands over; it pulses after the third dart. Skip works even if not all darts were thrown.</li>
@@ -1594,6 +1650,7 @@ function setLang(lang){
   $('btnSettings').setAttribute('aria-label', L('Nastavení', 'Settings'));
   $('btnHelp').setAttribute('aria-label', L('Nápověda', 'Help'));
   $('btnStats').setAttribute('aria-label', L('Statistiky', 'Statistics'));
+  $('miniBoard').setAttribute('aria-label', L('Terč se šipkami kola', 'Board with this round\'s darts'));
   $('btnLang').textContent = lang === 'en' ? 'CZ' : 'EN';
   $('btnCam').textContent = stream ? L('⏹ Vypnout kameru', '⏹ Stop camera') : L('📷 Spustit kameru', '📷 Start camera');
   if (calMode !== 'none') updateCalHelp();
