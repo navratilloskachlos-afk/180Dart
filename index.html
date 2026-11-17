@@ -5,12 +5,13 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="Šipky">
+<meta name="apple-mobile-web-app-title" content="180Dart">
 <meta name="theme-color" content="#0e1116">
 <link rel="manifest" href="manifest.webmanifest">
-<link rel="icon" type="image/png" href="icon-192.png">
+<link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png?v=2">
+<link rel="icon" type="image/png" sizes="64x64" href="favicon-64.png?v=2">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
-<title>Šipky</title>
+<title>180Dart</title>
 <style>
 :root{--bg:#0e1116;--card:#171c24;--card2:#1e2530;--line:#2a313c;--txt:#e8edf3;--mut:#8b97a7;--acc:#3ddc84;--warn:#ffb020;--bad:#ff5a5f;--blue:#4aa3ff}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
@@ -1473,7 +1474,7 @@ function openHelp(){
 function setLang(lang){
   LANG = lang;
   document.documentElement.lang = lang;
-  document.title = L('Šipky', 'Darts');
+  document.title = '180Dart';
   document.querySelectorAll('[data-en]').forEach(el => {
     if (el.dataset.cs === undefined) el.dataset.cs = el.innerHTML;
     el.innerHTML = lang === 'en' ? el.dataset.en : el.dataset.cs;
